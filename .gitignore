@@ -1,0 +1,29 @@
+# Local .terraform directories
+.terraform/
+
+# Terraform plan files
+*.tfplan
+
+# State files and backups (can contain sensitive data!)
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Override files (local custom settings, often untracked on purpose)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Variable files with secrets (if you use them)
+*.auto.tfvars
+*.auto.tfvars.json
+*.tfvars
+*.tfvars.json
+
+# IntelliJ IDEA
+/.idea/
+*.iml
+
+# avoid accidental push
+.env
