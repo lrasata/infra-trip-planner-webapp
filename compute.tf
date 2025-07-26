@@ -1,40 +1,72 @@
-module "ecs" {
-  source = "terraform-aws-modules/ecs/aws"
-  name   = "trip-design-ecs"
+module "ecs_cluster" {
+  source       = "terraform-aws-modules/ecs/aws"
+  cluster_name = "ecs-cluster-trip-design"
 
-  cluster_name = "trip-design-cluster"
+  default_capacity_provider_strategy = {}
+}
 
-  vpc_id              = module.vpc.vpc_id
-  subnet_ids          = module.vpc.private_subnets
-  create_task_exec_iam_role = true #  Used by ECS/Fargate to pull images and sends logs
-  create_task_iam_role      = true # IAM role that the ECS task assumes at runtime to interact with AWS services.
+module "ecs_task_execution_role" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role"
+  version = "5.34.0"
 
-  task_cpu    = 512
-  task_memory = 1024
+  role_name             = "ecsTaskExecutionRole"
+  trusted_role_services = ["ecs-tasks.amazonaws.com"]
+
+  custom_role_policy_arns = [
+    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+    "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+  ]
+}
+
+# --- ECS Task Definition ---
+resource "aws_ecs_task_definition" "task-trip-design" {
+  family                   = "task-trip-design"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = module.ecs_task_execution_role.iam_role_arn
 
   container_definitions = jsonencode([
     {
-      name      = "trip-design-container"
-      image     = var.container_image
-      essential = true
+      name      = "trip-design-container",
+      image     = var.container_image,
+      essential = true,
       portMappings = [
         {
-          containerPort = 8080
-          hostPort      = 8080
+          containerPort = 8080,
+          hostPort      = 8080,
         }
-      ]
+      ],
       environment = [
         { name = "ENVIRONMENT", value = "production" },
-        { name = "SPRING_DATASOURCE_URL", value = var.database_url },
-        { name = "SPRING_DATASOURCE_USERNAME", value = var.database_username },
-        { name = "SPRING_DATASOURCE_PASSWORD", value = var.database_password },
-        { name = "JWT_SECRET_KEY", value = var.jwt_secret_key },
+        { name = "SPRING_DATASOURCE_URL", value = "jdbc:postgresql://${module.db.db_instance_address}:5432/${var.database_name}" },
         { name = "ALLOWED_ORIGIN", value = var.allowed_origin },
         { name = "COOKIE_SECURE_ATTRIBUTE", value = var.cookie_secure_attribute },
         { name = "COOKIE_SAME_SITE", value = var.cookie_same_site },
-        { name = "SUPER_ADMIN_FULLNAME", value = var.super_admin_fullname },
-        { name = "SUPER_ADMIN_EMAIL", value = var.super_admin_email },
-        { name = "SUPER_ADMIN_PASSWORD", value = var.super_admin_password }
+        { name = "SUPER_ADMIN_FULLNAME", value = var.super_admin_fullname }
+      ],
+      secrets = [
+        {
+          name      = "SPRING_DATASOURCE_USERNAME"
+          valueFrom = "${data.aws_secretsmanager_secret.trip_design_secrets.arn}:SPRING_DATASOURCE_USERNAME::"
+        },
+        {
+          name      = "SPRING_DATASOURCE_PASSWORD"
+          valueFrom = "${data.aws_secretsmanager_secret.trip_design_secrets.arn}:SPRING_DATASOURCE_PASSWORD::"
+        },
+        {
+          name      = "JWT_SECRET_KEY"
+          valueFrom = "${data.aws_secretsmanager_secret.trip_design_secrets.arn}:JWT_SECRET_KEY::"
+        },
+        {
+          name      = "SUPER_ADMIN_EMAIL"
+          valueFrom = "${data.aws_secretsmanager_secret.trip_design_secrets.arn}:SUPER_ADMIN_EMAIL::"
+        },
+        {
+          name      = "SUPER_ADMIN_PASSWORD"
+          valueFrom = "${data.aws_secretsmanager_secret.trip_design_secrets.arn}:SUPER_ADMIN_PASSWORD::"
+        }
       ]
       logConfiguration = {
         logDriver = "awslogs"
@@ -48,21 +80,15 @@ module "ecs" {
   ])
 }
 
-resource "aws_ecs_service" "spring_service" {
-  name            = "trip-design-service"
-  cluster         = module.ecs.cluster_id
-  task_definition = module.ecs.task_definition_arn
+resource "aws_ecs_service" "ecs_service_trip_design" {
+  name            = "ecs-service-trip-design"
+  cluster         = module.ecs_cluster.cluster_id
+  task_definition = aws_ecs_task_definition.task-trip-design.arn
   desired_count   = 2
   launch_type     = "FARGATE"
   network_configuration {
-    subnets         = module.vpc.private_subnets
-    security_groups = [aws_security_group.ecs_tasks.id]
+    subnets          = [module.vpc.private_subnets[0]]
+    security_groups  = [aws_security_group.sg_ecs.id]
     assign_public_ip = false
   }
-  load_balancer {
-    target_group_arn = aws_lb_target_group.spring_tg.arn
-    container_name   = "trip-design-load-balancer"
-    container_port   = 8080
-  }
-  depends_on = [aws_lb_listener.http]
 }

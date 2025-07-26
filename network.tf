@@ -1,49 +1,50 @@
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "4.0.2"
+  version = "5.1.0"
 
-  name = "trip-design-vpc"
+  name = "vpc-trip-design"
   cidr = "10.0.0.0/16"
 
   azs             = ["${var.region}a", "${var.region}b"]
   public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
-  private_subnets = ["10.0.3.0/24", "10.0.4.0/24"]
+  private_subnets = ["10.0.3.0/24", "10.0.4.0/24"] # ECS / RDS
 
   enable_nat_gateway = true # allow ECS tasks to pull images from ECR/Docker Hub and install udpates
   single_nat_gateway = true
 }
 
-resource "aws_lb" "spring_lb" {
-  name               = "spring-alb"
-  internal           = false
+module "alb" {
+  source  = "terraform-aws-modules/alb/aws"
+  version = "8.7.0"
+
+  name               = "alb-trip-design"
   load_balancer_type = "application"
+  vpc_id             = module.vpc.vpc_id
   subnets            = module.vpc.public_subnets
-  security_groups    = [aws_security_group.alb.id]
+  security_groups    = [aws_security_group.sg_alb.id]
+
+  target_groups = [
+    {
+      name_prefix      = "tg-"
+      backend_protocol = "HTTP"
+      backend_port     = 8080
+      target_type      = "ip"
+    }
+  ]
+
+  http_tcp_listeners = [
+    {
+      port     = 80
+      protocol = "HTTP"
+      default_action = {
+        type               = "forward"
+        target_group_index = 0
+      }
+    }
+  ]
 }
 
-resource "aws_lb_target_group" "spring_tg" {
-  name     = "spring-tg"
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = module.vpc.vpc_id
-
-  health_check {
-    path                = "/actuator/health"
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200"
-  }
-}
-
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.spring_lb.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.spring_tg.arn
-  }
+resource "aws_db_subnet_group" "rds_subnet_group" {
+  name       = "trip-design-rds-subnet-group"
+  subnet_ids = [module.vpc.private_subnets[1]]
 }
