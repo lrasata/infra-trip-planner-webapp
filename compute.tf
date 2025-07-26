@@ -9,6 +9,7 @@ module "ecs_task_execution_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role"
   version = "5.34.0"
 
+  create_role           = true # required
   role_name             = "ecsTaskExecutionRole"
   trusted_role_services = ["ecs-tasks.amazonaws.com"]
 
@@ -26,6 +27,7 @@ resource "aws_ecs_task_definition" "task-trip-design" {
   cpu                      = "256"
   memory                   = "512"
   execution_role_arn       = module.ecs_task_execution_role.iam_role_arn
+  task_role_arn            = module.ecs_task_execution_role.iam_role_arn
 
   container_definitions = jsonencode([
     {
@@ -42,7 +44,7 @@ resource "aws_ecs_task_definition" "task-trip-design" {
         { name = "ENVIRONMENT", value = "production" },
         { name = "SPRING_DATASOURCE_URL", value = "jdbc:postgresql://${module.db.db_instance_address}:5432/${var.database_name}" },
         { name = "ALLOWED_ORIGIN", value = var.allowed_origin },
-        { name = "COOKIE_SECURE_ATTRIBUTE", value = var.cookie_secure_attribute },
+        { name = "COOKIE_SECURE_ATTRIBUTE", value = tostring(var.cookie_secure_attribute) }, # for boolean, must explicitly convert the boolean to a string
         { name = "COOKIE_SAME_SITE", value = var.cookie_same_site },
         { name = "SUPER_ADMIN_FULLNAME", value = var.super_admin_fullname }
       ],

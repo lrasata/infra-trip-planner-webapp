@@ -8,7 +8,7 @@ module "db" {
   identifier = "db-trip-design"
 
   engine            = "postgres"
-  engine_version    = "15.3"
+  engine_version    = "15.7"
   instance_class    = "db.t3.micro"
   allocated_storage = 20
 
