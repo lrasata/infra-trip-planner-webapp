@@ -25,13 +25,20 @@ module "alb" {
 
   target_groups = [
     {
-      name_prefix           = "tg-"
-      backend_protocol      = "HTTP"
-      backend_port          = 8080
-      target_type           = "ip"
-      health_check_path     = "/actuator/health"
-      health_check_port     = "traffic-port"
-      health_check_protocol = "HTTP"
+      name_prefix      = "tg-"
+      backend_protocol = "HTTP"
+      backend_port     = 8080
+      target_type      = "ip"
+      health_check = {
+        path                = "/actuator/health"
+        port                = "traffic-port"
+        protocol            = "HTTP"
+        matcher             = "200-399"
+        interval            = 30
+        timeout             = 5
+        healthy_threshold   = 2
+        unhealthy_threshold = 2
+      }
     }
   ]
 
