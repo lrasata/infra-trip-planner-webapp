@@ -5,18 +5,36 @@ module "ecs_cluster" {
   default_capacity_provider_strategy = {}
 }
 
-module "ecs_task_execution_role" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role"
-  version = "5.34.0"
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name = "ecsTaskExecutionRole"
 
-  create_role           = true # required
-  role_name             = "ecsTaskExecutionRole"
-  trusted_role_services = ["ecs-tasks.amazonaws.com"]
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
 
-  custom_role_policy_arns = [
-    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
-    "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
-  ]
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_secrets_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+}
+
+resource "aws_cloudwatch_log_group" "ecs_trip_design" {
+  name              = "/ecs/trip-design-app"
+  retention_in_days = 7
 }
 
 # --- ECS Task Definition ---
@@ -26,8 +44,8 @@ resource "aws_ecs_task_definition" "task-trip-design" {
   network_mode             = "awsvpc"
   cpu                      = "256"
   memory                   = "512"
-  execution_role_arn       = module.ecs_task_execution_role.iam_role_arn
-  task_role_arn            = module.ecs_task_execution_role.iam_role_arn
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([
     {
@@ -73,7 +91,7 @@ resource "aws_ecs_task_definition" "task-trip-design" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/ecs/trip-design-app"
+          awslogs-group         = aws_cloudwatch_log_group.ecs_trip_design.name
           awslogs-region        = var.region
           awslogs-stream-prefix = "ecs"
         }
@@ -93,4 +111,14 @@ resource "aws_ecs_service" "ecs_service_trip_design" {
     security_groups  = [aws_security_group.sg_ecs.id]
     assign_public_ip = false
   }
+  load_balancer {
+    target_group_arn = module.alb.target_group_arns[0]
+    container_name   = "trip-design-container"
+    container_port   = 8080
+  }
+
+  depends_on = [
+    module.alb,
+    module.db
+  ] # ensures ALB and DB are created before ECS
 }

@@ -9,7 +9,7 @@ module "vpc" {
   private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
   public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
 
-  enable_nat_gateway = true # allow ECS tasks to pull images from ECR/Docker Hub and install udpates
+  enable_nat_gateway = true # allow ECS tasks to pull images from ECR/Docker Hub and install updates
   single_nat_gateway = true
 }
 
@@ -25,10 +25,13 @@ module "alb" {
 
   target_groups = [
     {
-      name_prefix      = "tg-"
-      backend_protocol = "HTTP"
-      backend_port     = 8080
-      target_type      = "ip"
+      name_prefix           = "tg-"
+      backend_protocol      = "HTTP"
+      backend_port          = 8080
+      target_type           = "ip"
+      health_check_path     = "/actuator/health"
+      health_check_port     = "traffic-port"
+      health_check_protocol = "HTTP"
     }
   ]
 
