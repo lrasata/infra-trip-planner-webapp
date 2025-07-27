@@ -1,6 +1,6 @@
-# Infra-trip-design-app | Terraform project 🚧
+# Infra-trip-design-app | Terraform project
 
-> **Status**: 🚧 in construction
+> Project status 🚧 In construction 
 
 ## Overview
 
@@ -28,7 +28,13 @@ This architecture offers a robust, secure, and scalable backend environment to p
 
 <img src="./docs/aws-diagram.png" alt="trip-design-backend-infrastructure">
 
----
+## Planned tasks
+- [ ] Integrate 3 different envs : `dev | stage | prod`
+- [ ] Enable Auto-scaling on AWS Fargate
+- [ ] Audit performance of TripDesignAPI and leverage caching strategy
+- [ ] For `prod` and `stage` envs, integrate Certificate Manager and WAF
+- [ ] For monitoring purpose on TripDesignAPI, deploy [Monitoring services](https://github.com/lrasata/monitoring-services) built with Prometheus and Grafana
+- [ ] Deploy the frontend [Trip Planner Web App](https://github.com/lrasata/trip-planner-web-app) on S3 + CloudFront
 
 ## 🔍 Gotcha -  what I have learned
 - ✅ *RDS Password Surprise:* Always provide a strong, non-trivial password to AWS RDS — even for testing. A weak password like postgres may be silently rejected by AWS, and RDS will auto-generate a new password, saving it in AWS Secrets Manager. Check this under DB Instance > Configuration > Master credentials ARN.
