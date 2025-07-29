@@ -1,4 +1,4 @@
-# Infra-trip-design-app | Terraform project
+# Deploy a Containerized Web App to AWS Fargate with Terraform
 
 > Project status 🚧 In construction 
 
