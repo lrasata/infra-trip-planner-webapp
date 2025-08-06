@@ -1,4 +1,4 @@
-# Deploy a Containerized Web App to AWS Fargate with Terraform
+# Deploy a Containerised Web App to AWS Fargate with Terraform
 
 > Project status 🚧 In construction 
 
@@ -33,8 +33,7 @@ This architecture offers a robust, secure, and scalable backend environment to p
 - [ ] Enable Auto-scaling on AWS Fargate
 - [ ] Audit performance of TripDesignAPI and leverage caching strategy
 - [ ] For `prod` and `stage` envs, integrate Certificate Manager and WAF
-- [ ] For monitoring purpose on TripDesignAPI, deploy [Monitoring services](https://github.com/lrasata/monitoring-services) built with Prometheus and Grafana
-- [ ] Deploy the frontend [Trip Planner Web App](https://github.com/lrasata/trip-planner-web-app) on S3 + CloudFront
+- [ ] For monitoring purpose on TripDesignAPI, deploy [Monitoring services](https://github.com/lrasata/monitoring-services) built with Prometheus and Grafana --> define value
 
 ## 🔍 Gotcha -  what I have learned
 - ✅ *RDS Password Surprise:* Always provide a strong, non-trivial password to AWS RDS — even for testing. A weak password like postgres may be silently rejected by AWS, and RDS will auto-generate a new password, saving it in AWS Secrets Manager. Check this under DB Instance > Configuration > Master credentials ARN.
@@ -50,7 +49,7 @@ This architecture offers a robust, secure, and scalable backend environment to p
   - Port mismatch (container not listening on the expected port)
   - Network/security group misconfig
 
-- 🐢 E*CS Container Start = Slower Than Expected:* Don't expect ECS Fargate to start containers instantly. Between image pulling, network setup, and health checks, startup can take 1–2+ minutes.
+- 🐢 *ECS Container Start = Slower Than Expected:* Don't expect ECS Fargate to start containers instantly. Between image pulling, network setup, and health checks, startup can take 1–2+ minutes.
 
 - 🔐 *SecretsManager ≠ Instant Fix:* Referencing secrets inside ECS task definitions must follow exact syntax (valueFrom must use the full ARN or proper SecretsManager parameter name). Mismatched names will cause cryptic errors.
 
