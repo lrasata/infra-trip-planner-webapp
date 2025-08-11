@@ -27,3 +27,4 @@ override.tf.json
 
 # avoid accidental push
 .env
+dist

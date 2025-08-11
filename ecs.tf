@@ -122,3 +122,25 @@ resource "aws_ecs_service" "ecs_service_trip_design" {
     module.db
   ] # ensures ALB and DB are created before ECS
 }
+
+resource "aws_security_group" "sg_ecs" {
+  name        = "ecs-sg"
+  description = "Allow outbound for ECS tasks and ALB to access ECS Tasks"
+  vpc_id      = module.vpc.vpc_id
+
+  # Allow traffic from the ALB on port 8080
+  ingress {
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = "tcp"
+    security_groups = [aws_security_group.sg_alb.id] # allow traffic from ALB
+  }
+
+  # Allow ECS tasks to reach out to the internet
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}

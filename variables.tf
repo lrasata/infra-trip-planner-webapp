@@ -37,3 +37,24 @@ variable "super_admin_fullname" {
   type        = string
 }
 
+variable "bucket_name" {
+  description = "The name of the S3 bucket for the React app"
+  type        = string
+  default     = "trip-design-app-bucket"
+}
+
+variable "environment" {
+  description = "The environment for the deployment (e.g., dev, prod)"
+  type        = string
+  default     = "prod"
+}
+
+variable "alb_certificate_arn" {
+  description = "The ARN of the ACM certificate for the ALB HTTPS listener"
+  type        = string
+}
+
+variable "cloudfront_certificate_arn" {
+    description = "The ARN of the ACM certificate for CloudFront"
+    type        = string
+}
