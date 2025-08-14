@@ -1,6 +1,6 @@
 module "db" {
   source     = "terraform-aws-modules/rds/aws"
-  identifier = "db-trip-design"
+  identifier = "db-trip-planner"
 
   engine            = "postgres"
   engine_version    = "15.7"
@@ -8,8 +8,8 @@ module "db" {
   allocated_storage = 20
 
   db_name  = var.database_name
-  username = local.trip_secrets["SPRING_DATASOURCE_USERNAME"]
-  password = local.trip_secrets["SPRING_DATASOURCE_PASSWORD"]
+  username = local.datasource_username
+  password = local.datasource_password
   port     = 5432
 
   vpc_security_group_ids = [aws_security_group.sg_rds.id]
@@ -23,8 +23,8 @@ module "db" {
 
 
 resource "aws_db_subnet_group" "rds_subnet_group" {
-  name       = "trip-design-rds-subnet-group"
-  subnet_ids = [module.vpc.private_subnets[1], module.vpc.private_subnets[2]] # At least two subnets in different AZs
+  name       = "trip-planner-rds-subnet-group"
+  subnet_ids = module.vpc.private_subnets # At least two subnets in different AZs
 }
 
 resource "aws_security_group" "sg_rds" {

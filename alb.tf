@@ -1,8 +1,12 @@
+# -------------------------
+# ALB : Application Load Balancer - exposes the backend service
+# This module creates an Application Load Balancer (ALB) with a target group and listener
+# -------------------------
 module "alb" {
   source  = "terraform-aws-modules/alb/aws"
   version = "8.7.0"
 
-  name               = "alb-trip-design"
+  name               = "alb-trip-planner"
   load_balancer_type = "application"
   vpc_id             = module.vpc.vpc_id
   subnets            = module.vpc.public_subnets
@@ -22,18 +26,17 @@ module "alb" {
         interval            = 30
         timeout             = 5
         healthy_threshold   = 2
-        unhealthy_threshold = 2
+        unhealthy_threshold = 10
       }
     }
   ]
 
-
-  http_tcp_listeners = [
+  https_listeners = [
     {
-      port     = 443
-      protocol = "HTTPS"
-      ssl_policy = "ELBSecurityPolicy-2016-08"
-      certificate_arn = var.alb_certificate_arn
+      port            = 443
+      protocol        = "HTTPS"
+      ssl_policy      = "ELBSecurityPolicy-2016-08"
+      certificate_arn = var.backend_certificate_arn
 
       default_action = {
         type               = "forward"
@@ -41,6 +44,22 @@ module "alb" {
       }
     }
   ]
+
+}
+
+resource "aws_lb_listener" "http_redirect" {
+  load_balancer_arn = module.alb.lb_arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+    redirect {
+      protocol    = "HTTPS"
+      port        = "443"
+      status_code = "HTTP_301"
+    }
+  }
 }
 
 resource "aws_security_group" "sg_alb" {
@@ -60,5 +79,19 @@ resource "aws_security_group" "sg_alb" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+
+# ROUTE 53 ALIAS RECORD
+resource "aws_route53_record" "alb_domain" {
+  zone_id = var.hosted_zone_id
+  name    = var.alb_domain_name
+  type    = "A"
+
+  alias {
+    name                   = module.alb.lb_dns_name
+    zone_id                = module.alb.lb_zone_id
+    evaluate_target_health = true
   }
 }

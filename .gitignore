@@ -28,3 +28,5 @@ override.tf.json
 # avoid accidental push
 .env
 dist
+*.zip
+lambda/node_modules

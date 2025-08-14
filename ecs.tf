@@ -32,14 +32,14 @@ resource "aws_iam_role_policy_attachment" "ecs_secrets_policy" {
   policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
 }
 
-resource "aws_cloudwatch_log_group" "ecs_trip_design" {
-  name              = "/ecs/trip-design-app"
+resource "aws_cloudwatch_log_group" "ecs_trip_planner" {
+  name              = "/ecs/trip-planner-app"
   retention_in_days = 7
 }
 
 # --- ECS Task Definition ---
-resource "aws_ecs_task_definition" "task-trip-design" {
-  family                   = "task-trip-design"
+resource "aws_ecs_task_definition" "task-trip-planner" {
+  family                   = "task-trip-planner"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = "256"
@@ -49,7 +49,7 @@ resource "aws_ecs_task_definition" "task-trip-design" {
 
   container_definitions = jsonencode([
     {
-      name      = "trip-design-container",
+      name      = "trip-planner-container",
       image     = var.container_image,
       essential = true,
       portMappings = [
@@ -91,7 +91,7 @@ resource "aws_ecs_task_definition" "task-trip-design" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = aws_cloudwatch_log_group.ecs_trip_design.name
+          awslogs-group         = aws_cloudwatch_log_group.ecs_trip_planner.name
           awslogs-region        = var.region
           awslogs-stream-prefix = "ecs"
         }
@@ -101,21 +101,23 @@ resource "aws_ecs_task_definition" "task-trip-design" {
 }
 
 resource "aws_ecs_service" "ecs_service_trip_design" {
-  name            = "ecs-service-trip-design"
+  name            = "ecs-service-trip-planner"
   cluster         = module.ecs_cluster.cluster_id
-  task_definition = aws_ecs_task_definition.task-trip-design.arn
+  task_definition = aws_ecs_task_definition.task-trip-planner.arn
   desired_count   = 2
   launch_type     = "FARGATE"
   network_configuration {
-    subnets          = [module.vpc.private_subnets[0]]
+    subnets          = module.vpc.private_subnets
     security_groups  = [aws_security_group.sg_ecs.id]
     assign_public_ip = false
   }
   load_balancer {
     target_group_arn = module.alb.target_group_arns[0]
-    container_name   = "trip-design-container"
+    container_name   = "trip-planner-container"
     container_port   = 8080
   }
+  health_check_grace_period_seconds = 120
+
 
   depends_on = [
     module.alb,

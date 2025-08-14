@@ -2,7 +2,7 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.1.0"
 
-  name = "vpc-trip-design"
+  name = "vpc-trip-planner"
   cidr = "10.0.0.0/16"
 
   azs             = ["eu-central-1a", "eu-central-1b", "eu-central-1c"]

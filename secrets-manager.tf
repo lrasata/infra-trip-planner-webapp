@@ -7,8 +7,10 @@ data "aws_secretsmanager_secret_version" "trip_design_secrets_value" {
 }
 
 locals {
-  trip_secrets = jsondecode(data.aws_secretsmanager_secret_version.trip_design_secrets_value.secret_string)
-  auth_secret = jsondecode(data.aws_secretsmanager_secret_version.trip_design_secrets_value.secret_string)["CUSTOM_AUTH_SECRET"]
+  datasource_username  = jsondecode(data.aws_secretsmanager_secret_version.trip_design_secrets_value.secret_string)["SPRING_DATASOURCE_USERNAME"]
+  datasource_password  = jsondecode(data.aws_secretsmanager_secret_version.trip_design_secrets_value.secret_string)["SPRING_DATASOURCE_PASSWORD"]
+  geo_db_rapid_api_key = jsondecode(data.aws_secretsmanager_secret_version.trip_design_secrets_value.secret_string)["GEO_DB_RAPID_API_KEY"]
+  auth_secret          = jsondecode(data.aws_secretsmanager_secret_version.trip_design_secrets_value.secret_string)["CUSTOM_AUTH_SECRET"]
 }
 
 resource "aws_iam_policy" "secrets_access" {
