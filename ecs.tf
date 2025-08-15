@@ -104,7 +104,7 @@ resource "aws_ecs_service" "ecs_service_trip_design" {
   name            = "ecs-service-trip-planner"
   cluster         = module.ecs_cluster.cluster_id
   task_definition = aws_ecs_task_definition.task-trip-planner.arn
-  desired_count   = 2
+  desired_count   = 3 #  must be >= min_capacity of the scaling target
   launch_type     = "FARGATE"
   network_configuration {
     subnets          = module.vpc.private_subnets
@@ -144,5 +144,32 @@ resource "aws_security_group" "sg_ecs" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Create an Application Auto Scaling Target
+resource "aws_appautoscaling_target" "ecs_service_scaling_target" {
+  max_capacity       = 5
+  min_capacity       = 2
+  resource_id        = "service/${module.ecs_cluster.cluster_name}/${aws_ecs_service.ecs_service_trip_design.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+# Define a scaling policy based on CPU utilization
+resource "aws_appautoscaling_policy" "ecs_service_cpu_policy" {
+  name               = "cpu-scaling-policy"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs_service_scaling_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_service_scaling_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_service_scaling_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    target_value       = 50.0
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    scale_in_cooldown  = 60
+    scale_out_cooldown = 60
   }
 }

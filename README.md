@@ -59,13 +59,6 @@ This architecture offers a robust, secure, and scalable backend environment to p
 - 🛑 *Security Group Deletion Blocked:* Terraform cannot delete a security group if it's still attached to active resources (like ECS, ALB, or RDS) — even if the plan shows successful validation. This can stall terraform destroy for several minutes.
 - 🔄 *Terraform Ordering Matters:* Ensure ECS services depend on RDS or networking modules (depends_on), otherwise containers may try to start before the DB is available.
 
-## TODO tasks
-- [ ] Integrate 3 different envs : `dev | stage | prod`
-- [ ] Add firewall AWS WAF
-- [ ] Enable Auto-scaling on AWS Fargate
-- [ ] Audit performance of TripPlannerAPI and leverage caching strategy
-- [ ] For monitoring purpose on TripPlannerAPI, deploy [Monitoring services](https://github.com/lrasata/monitoring-services) built with Prometheus and Grafana --> define value
-
 # Locations API (AWS Lambda + API Gateway)
 Those components provide a secure serverless API for accessing location data, powered by AWS Lambda and API Gateway.
 
@@ -169,3 +162,8 @@ This part of the infra sets up an AWS **CloudFront distribution** to serve a **S
    - in this case : `VITE_API_LOCATIONS=https://epic-trip-planner.com/locations`
    - NOT : `VITE_API_LOCATIONS=https://api-locations.epic-trip-planner.com/locations` - hitting the API Gateway directly will not work as it does not inject the custom header.
 
+## TODO tasks
+- [ ] Integrate 3 different envs : `dev | stage | prod`
+- [ ] Add firewall AWS WAF for Cloudfront and the ALB of the Backend API
+- [ ] Audit performance of TripPlannerAPI and leverage caching strategy
+- [ ] For monitoring purpose on TripPlannerAPI, deploy [Monitoring services](https://github.com/lrasata/monitoring-services) built with Prometheus and Grafana --> define value
