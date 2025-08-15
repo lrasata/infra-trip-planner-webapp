@@ -1,7 +1,21 @@
-
+# Trip Planner Infrastructure - managed with Terraform on AWS
+  
 <img src="docs/full-diagram.png" alt="trip-planner-infrastructure">
 
-
+# Table of Contents
+- [Backend Infrastructure (TripPlannerAPI)](#backend-infrastructure-of-tripplannerapi)
+  - [Infrastructure Overview](#infrastructure-overview)
+  - [Gotchas & Lessons Learned](#-gotcha---what-i-have-learned)
+- [Locations API (AWS Lambda + API Gateway)](#locations-api-aws-lambda--api-gateway)
+  - [Infrastructure Overview](#infrastructure-overview-1)
+  - [Environment Variables & Secrets](#env-variables-and-secret-api-key)
+  - [API Usage](#api-usage)
+  - [Gotchas & Notes](#-gotcha---notes)
+- [Frontend - Trip Planner Web App](#frontend---trip-planner-web-app)
+  - [Stack](#stack)
+  - [Security](#security)
+  - [Gotchas & Notes](#-gotcha---notes-1)
+  
 # Backend infrastructure of TripPlannerAPI
 > Deployment of Containerised Web App to AWS Fargate and RDS database with Terraform
 
@@ -57,7 +71,7 @@ Those components provide a secure serverless API for accessing location data, po
 
 <img src="./docs/locations-api.png" alt="location-api-diagram">
 
-### Purpose & Context
+### Infrastructure Overview
 
 [Trip planner web app](https://github.com/lrasata/trip-planner-web-app) is using [Geo DB API](https://rapidapi.com/wirefreethought/api/geodb-cities)
 to fetch data related to cities and countries.
@@ -77,7 +91,7 @@ the frontend and a backend must be used to access them. **There is no secure way
 - **Secrets**: AWS Lambda environment variables
 - **Security**: API Gateway integration
 
-#### Define Env variables and secret API key
+## Env variables and secret API key
 
 **Local development**
 
@@ -128,4 +142,30 @@ curl https://<your-api-id>.execute-api.<region>.amazonaws.com/prod/locations?dat
 
 # Frontend - Trip planner web app
 
+> Deployment of CloudFront + S3 + Lambda@Edge for SPA Hosting
+
 <img src="docs/frontend-diagram.png" alt="trip-planner-frontend-infra">
+
+This part of the infra sets up an AWS **CloudFront distribution** to serve a **Single Page Application (SPA)** from an **S3 bucket**, using **Lambda@Edge** to handle routing for client-side routes. It ensures that all SPA routes return `index.html` while keeping the S3 bucket secure and private.
+
+## Stack
+
+- **Lambda@Edge:** Handles viewer requests to serve `index.html` for routes that do not exist in S3.
+- **CloudFront CDN:** Provides caching, HTTPS, and custom domain support.
+- **S3 Bucket:** Private bucket with versioning enabled for static SPA files.
+- **Secure Access:** Only CloudFront can access the S3 bucket via Origin Access Control (OAC).
+
+## Security
+- S3 bucket blocks all public access.
+- CloudFront Origin Access Control ensures only CloudFront can access the bucket.
+- Lambda@Edge uses minimal IAM permissions via AWSLambdaBasicExecutionRole.
+
+## 🔎 Gotcha - Notes
+- Frontend app must be built with `npm run build` before deploying adn /dist folder must de sync with S3 bucket.
+- Terraform handles static file upload from ./dist
+- Lambda@Edge must be deployed in `us-east-1` region, as this is the only region that supports Lambda@Edge.
+- Certificates must be requested in `us-east-1` for CloudFront to work with HTTPS
+-  Frontend app must use the cloudfront URL as the API endpoint, not the API Gateway URL. This is because only CloudFront is able to inject the Custom Header `X-Custom-Auth` with the correct secret value recognised by the API Gateway.
+   - in this case : `VITE_API_LOCATIONS=https://epic-trip-planner.com/locations`
+   - NOT : `VITE_API_LOCATIONS=https://api-locations.epic-trip-planner.com/locations` - hitting the API Gateway directly will not work as it does not inject the custom header.
+
