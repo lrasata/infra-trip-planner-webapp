@@ -49,8 +49,13 @@ terraform apply
 ````text
 infra-trip-design-app/
 ├── cloudfront.tf                   
-├── ecs.tf                    
-├── nb.tf                 
+├── ecs.tf  
+├── api-gateway.tf                    
+├── alb.tf 
+├── lambda.tf
+├── lambda/handler.js              # Lambda function handler  
+├── lambda_edge.tf
+├── spa_fallback/index.html  # SPA fallback for CloudFront                 
 ├── rds.tf                  
 ├── s3.tf    
 ├── secrets-manager.tf     
