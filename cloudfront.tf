@@ -142,7 +142,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
-  aliases = [var.cloudfront_domain_name, "epic-trip-planner.com"]
+  aliases = [var.cloudfront_domain_name]
 
   depends_on = [
     aws_s3_bucket.s3_bucket,
@@ -170,18 +170,6 @@ data "aws_route53_zone" "main" {
 resource "aws_route53_record" "cdn_alias_webapp" {
   zone_id = data.aws_route53_zone.main.zone_id
   name    = var.cloudfront_domain_name
-  type    = "A"
-
-  alias {
-    name                   = aws_cloudfront_distribution.cdn.domain_name
-    zone_id                = aws_cloudfront_distribution.cdn.hosted_zone_id
-    evaluate_target_health = false
-  }
-}
-
-resource "aws_route53_record" "cdn_alias_main" {
-  zone_id = data.aws_route53_zone.main.zone_id
-  name    = "epic-trip-planner.com"
   type    = "A"
 
   alias {

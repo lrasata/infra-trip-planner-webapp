@@ -1,3 +1,6 @@
+# Lambda@Edge function for SPA fallback in CloudFront
+# This function serves the SPA fallback page when a user navigates to a non-existent route
+# In this case, it serves the index.html file from the S3 bucket for any route which is different from /api/* or /auth/*
 provider "aws" {
   alias  = "useast1"
   region = "us-east-1"

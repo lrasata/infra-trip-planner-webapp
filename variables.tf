@@ -89,7 +89,7 @@ variable "alb_domain_name" {
 variable "cloudfront_domain_name" {
   description = "The domain name for CloudFront distribution"
   type        = string
-  default     = "webapp.epic-trip-planner.com"
+  default     = "epic-trip-planner.com"
 }
 
 variable "hosted_zone_id" {
