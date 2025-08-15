@@ -1,7 +1,7 @@
 const corsHeaders = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Custom-Auth",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
     "Access-Control-Allow-Methods": "GET,OPTIONS",
 };
 
@@ -50,7 +50,6 @@ exports.handler = async (event) => {
     }
 
     try {
-        const fetch = (await import("node-fetch")).default;
         const response = await fetch(url, {
             headers: {
                 "X-RapidAPI-Host": process.env.GEO_DB_RAPID_API_HOST,

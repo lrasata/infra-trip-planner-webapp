@@ -1,12 +1,14 @@
 
-<img src="docs/full-diagram.png" alt="trip-design-infrastructure">
+<img src="docs/full-diagram.png" alt="trip-planner-infrastructure">
 
 
-# Backend : TripPlannerAPI  - Infrastructure
+# Backend infrastructure of TripPlannerAPI
 > Deployment of Containerised Web App to AWS Fargate and RDS database with Terraform
 
 The backend is a Spring Boot application serves as the backend counterpart to the [Trip Planner Web App](https://github.com/lrasata/trip-planner-web-app).
 It provides endpoints to create, read, update, and delete trip data, enabling seamless trip planning and management.
+
+<img src="docs/backend-diagram.png" alt="trip-planner-backend-api-infra">
 
 #### Infrastructure Overview
 - **Containerization & Orchestration:** The backend runs as Docker containers deployed on AWS Fargate, a serverless compute engine for containers. This eliminates the need to manage EC2 instances and simplifies scaling and maintenance.
@@ -17,21 +19,15 @@ It provides endpoints to create, read, update, and delete trip data, enabling se
 - **Secrets Management:** Database credentials and sensitive configuration values are securely stored and accessed via AWS Secrets Manager, reducing the risk of credential leaks and simplifying secret rotation.
 - **Observability:** Application logs from ECS tasks are streamed to AWS CloudWatch Logs, enabling real-time monitoring, troubleshooting, and alerting.
 
-This architecture offers a robust, secure, and scalable backend environment to power the Trip Design application, taking full advantage of AWS managed services to reduce operational overhead and improve reliability.
-
-## Planned tasks
-- [ ] Integrate 3 different envs : `dev | stage | prod`
-- [ ] Enable Auto-scaling on AWS Fargate
-- [ ] Audit performance of TripPlannerAPI and leverage caching strategy
-- [ ] For `prod` and `stage` envs, integrate Certificate Manager and WAF
-- [ ] For monitoring purpose on TripPlannerAPI, deploy [Monitoring services](https://github.com/lrasata/monitoring-services) built with Prometheus and Grafana --> define value
+This architecture offers a robust, secure, and scalable backend environment to power the Trip Planner application, taking full advantage of AWS managed services to reduce operational overhead and improve reliability.
 
 ## 🔍 Gotcha -  what I have learned
-### RDS
+### RDS - Database
 - ✅ *RDS Password Surprise:* Always provide a strong, non-trivial password to AWS RDS — even for testing. A weak password like postgres may be silently rejected by AWS, and RDS will auto-generate a new password, saving it in AWS Secrets Manager. Check this under DB Instance > Configuration > Master credentials ARN.
     - In this case you may manually update secrets password provided to the ECS Service to align with the AWS RDS generated password.
 - 🌐 *RDS Subnet Requirement:* AWS RDS in production mode requires at least two subnets in different availability zones to enable high availability. If you only provide one, deployment will fail silently or behave unexpectedly.
 - 🧠 *Database Connectivity Doesn't Show Up in RDS UI:* The “connected compute resources” in the RDS console is not always accurate for ECS or non-EC2 clients. Don’t rely on it to debug connectivity.
+
 ### ALB
 - 🧱 *Target Group Unhealthy == No Traffic:* If your ECS container is running but your ALB Target Group is showing “unhealthy” targets, the ALB will not forward traffic. This is typically caused by:
     - Wrong health check path (e.g., / vs /actuator/health)
@@ -41,10 +37,95 @@ This architecture offers a robust, secure, and scalable backend environment to p
 
 ### ECS
 - 🐢 *ECS Container Start = Slower Than Expected:* Don't expect ECS Fargate to start containers instantly. Between image pulling, network setup, and health checks, startup can take 1–2+ minutes.
+
 ### Secrets Manager
 - 🔐 *SecretsManager ≠ Instant Fix:* Referencing secrets inside ECS task definitions must follow exact syntax (valueFrom must use the full ARN or proper SecretsManager parameter name). Mismatched names will cause cryptic errors.
+
 ### Terraform
 - 🛑 *Security Group Deletion Blocked:* Terraform cannot delete a security group if it's still attached to active resources (like ECS, ALB, or RDS) — even if the plan shows successful validation. This can stall terraform destroy for several minutes.
 - 🔄 *Terraform Ordering Matters:* Ensure ECS services depend on RDS or networking modules (depends_on), otherwise containers may try to start before the DB is available.
 
+## TODO tasks
+- [ ] Integrate 3 different envs : `dev | stage | prod`
+- [ ] Add firewall AWS WAF
+- [ ] Enable Auto-scaling on AWS Fargate
+- [ ] Audit performance of TripPlannerAPI and leverage caching strategy
+- [ ] For monitoring purpose on TripPlannerAPI, deploy [Monitoring services](https://github.com/lrasata/monitoring-services) built with Prometheus and Grafana --> define value
+
+# Locations API (AWS Lambda + API Gateway)
+Those components provide a secure serverless API for accessing location data, powered by AWS Lambda and API Gateway.
+
+<img src="./docs/locations-api.png" alt="location-api-diagram">
+
+### Purpose & Context
+
+[Trip planner web app](https://github.com/lrasata/trip-planner-web-app) is using [Geo DB API](https://rapidapi.com/wirefreethought/api/geodb-cities)
+to fetch data related to cities and countries.
+
+To be able to deploy [Trip planner web app](https://github.com/lrasata/trip-planner-web-app)
+(React + TypeScript web app) in a secure way on S3 + CloudFront, it must provide a secret `API_KEY` in the header of an authenticated request.
+
+But the challenge is, to inject secrets securely in a React + Vite app, secrets must be separated from
+the frontend and a backend must be used to access them. **There is no secure way to keep a secret in a public browser app.**
+
+> ✅ Locations API has been created to provide an API endpoint to call for the frontend without requiring any secrets.
+
+## Stack
+
+- **Runtime**: Node.js (Express-style Lambda)
+- **Infrastructure**: AWS Lambda, API Gateway (REST), Terraform
+- **Secrets**: AWS Lambda environment variables
+- **Security**: API Gateway integration
+
+#### Define Env variables and secret API key
+
+**Local development**
+
+In `lambda/hadnler.js`, the secret (e.g., API key) should be passed via environment variables in Terraform:
+
+```js
+Authorization: 'Bearer ${process.env.GEO_DB_RAPID_API_KEY}'
+```
+
+List of env variables :
+````text
+API_CITIES_GEO_DB_URL=
+API_COUNTRIES_GEO_DB_URL=
+GEO_DB_RAPID_API_HOST=
+GEO_DB_RAPID_API_KEY=
+````
+
+**For deployed env on AWS**
+
+Secrets has to be defined in AWS Secrets Manager inside : `prod/trip-planner-app/secrets` as configure in Terraform file.
+
+Environment variables has to be defined in `terraform.tfvars`
+
+## API Usage
+
+### GET `/locations?dataType=city&namePrefix=Paris`
+
+Query parameters :
+- **dataType**: `city` or `country`
+- **namePrefix**: the `string` to look up to perform matching on location name
+- **countryCode**: country code
+
+```bash
+curl https://<your-api-id>.execute-api.<region>.amazonaws.com/prod/locations?dataType=city&namePrefix=Paris
+```
+
+## 🔎 Gotcha - Notes
+- OPTIONS method should stay with CORS headers in API Gateway.
+  - API Gateway can automatically respond to preflight OPTIONS requests (which browsers send to check permissions) without invoking your Lambda — this reduces Lambda invocations and saves cost.
+- For GET requests (or any non-OPTIONS request), Lambda function must return the CORS headers.
+- No need to set CORS headers on API Gateway for GET/POST when using `Lambda proxy integration`.
+  - But ensure your Lambda function handles CORS headers for all responses (including errors).
+
+> 💡 Let API Gateway manage CORS whenever possible 💡
+> - API Gateway is designed to handle cross-origin resource sharing (CORS) settings centrally.
+> - API Gateway can add necessary CORS headers on the response for all your API calls consistently.
+> - Keep Lambda code simpler and focused on business logic.
+
 # Frontend - Trip planner web app
+
+<img src="docs/frontend-diagram.png" alt="trip-planner-frontend-infra">

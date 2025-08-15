@@ -5,19 +5,8 @@ resource "aws_cloudfront_distribution" "cdn" {
 
   origin {
     domain_name              = aws_s3_bucket.s3_bucket.bucket_regional_domain_name
-    origin_id                = "s3-bucket-origin"
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
-  }
-
-
-  origin {
-    domain_name = var.api_locations_domain_name
-    origin_id   = "api-gateway-origin"
-
-    custom_header {
-      name  = "X-Custom-Auth"
-      value = local.auth_secret
-    }
+    origin_id                = "s3-bucket-origin"
   }
 
   origin {
@@ -32,6 +21,22 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
+  origin {
+    domain_name = var.api_locations_domain_name
+    origin_id   = "api-gateway-origin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+
+    custom_header {
+      name  = "X-Custom-Auth"
+      value = local.auth_secret
+    }
+  }
   # -------------------------
   # Default behavior for frontend (S3)
   # -------------------------
@@ -110,24 +115,21 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   ordered_cache_behavior {
-    path_pattern     = "/locations*"
-    target_origin_id = "api-gateway-origin"
-
-    allowed_methods = ["GET", "OPTIONS"]
-    cached_methods  = ["GET", "HEAD"]
-
+    path_pattern           = "/locations*"
+    target_origin_id       = "api-gateway-origin"
+    allowed_methods        = ["HEAD", "GET", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
     viewer_protocol_policy = "redirect-to-https"
 
     forwarded_values {
       query_string = true
-      headers      = ["X-Custom-Auth"]
       cookies {
         forward = "none"
       }
     }
 
-
   }
+
 
   restrictions {
     geo_restriction {
@@ -140,7 +142,13 @@ resource "aws_cloudfront_distribution" "cdn" {
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
-  aliases = [var.cloudfront_domain_name]
+  aliases = [var.cloudfront_domain_name, "epic-trip-planner.com"]
+
+  depends_on = [
+    aws_s3_bucket.s3_bucket,
+    aws_cloudfront_origin_access_control.oac,
+    aws_lambda_function.spa_fallback
+  ]
 }
 
 resource "aws_cloudfront_origin_access_control" "oac" {
@@ -162,6 +170,18 @@ data "aws_route53_zone" "main" {
 resource "aws_route53_record" "cdn_alias_webapp" {
   zone_id = data.aws_route53_zone.main.zone_id
   name    = var.cloudfront_domain_name
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.cdn.domain_name
+    zone_id                = aws_cloudfront_distribution.cdn.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "cdn_alias_main" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = "epic-trip-planner.com"
   type    = "A"
 
   alias {

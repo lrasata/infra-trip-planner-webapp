@@ -24,11 +24,25 @@ resource "null_resource" "upload_static_files" {
   }
 }
 
-resource "aws_s3_bucket_policy" "s3-bucket-policy" {
+resource "aws_s3_bucket_policy" "s3_bucket_policy" {
   bucket = aws_s3_bucket.s3_bucket.id
 
-  policy = data.aws_iam_policy_document.s3_policy.json
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${aws_s3_bucket.s3_bucket.arn}/*"
+      }
+    ]
+  })
 }
+
+
 
 data "aws_iam_policy_document" "s3_policy" {
   statement {

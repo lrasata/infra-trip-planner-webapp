@@ -16,7 +16,7 @@ resource "aws_lambda_function" "spa_fallback" {
   function_name = "spa_fallback"
   role          = aws_iam_role.lambda_edge_role.arn
   handler       = "index.handler"
-  runtime       = "nodejs18.x"
+  runtime       = "nodejs20.x"
   publish       = true
 }
 
