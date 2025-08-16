@@ -15,8 +15,8 @@ variable "database_name" {
   default     = "tripdb"
 }
 
-variable "allowed_origin" {
-  description = "Allowed origin : domain that is explicitly permitted to access resources  in the context of Cross-Origin Resource Sharing (CORS)"
+variable "allowed_origins" {
+  description = "Allowed origins : list of domains which are explicitly permitted to access resources  in the context of Cross-Origin Resource Sharing (CORS)"
   type        = string
 }
 
@@ -97,3 +97,17 @@ variable "hosted_zone_id" {
   type        = string
 }
 
+variable "blocked_bots_waf_cloudfront" {
+  type    = list(string)
+  default = ["Nikto", "SQLMap", "ZAP", "Hydra", "Masscan"]
+}
+
+variable "blocked_bots_waf_alb" {
+  type = list(string)
+  default = [
+    "AhrefsBot",
+    "SemrushBot",
+    "MJ12bot",
+    "DotBot"
+  ]
+}
