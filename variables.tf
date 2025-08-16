@@ -97,3 +97,7 @@ variable "hosted_zone_id" {
   type        = string
 }
 
+variable "blocked_bots" {
+  type    = list(string)
+  default = ["Nikto", "SQLMap", "ZAP", "Hydra", "Masscan"]
+}

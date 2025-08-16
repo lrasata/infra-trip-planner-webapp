@@ -5,7 +5,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
   origin {
     domain_name              = aws_s3_bucket.s3_bucket.bucket_regional_domain_name
-    origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
+    origin_access_control_id = aws_cloudfront_origin_access_control.oac.id # ensures that CloudFront can access the S3 bucket without making it public
     origin_id                = "s3-bucket-origin"
   }
 
@@ -143,6 +143,9 @@ resource "aws_cloudfront_distribution" "cdn" {
     minimum_protocol_version = "TLSv1.2_2021"
   }
   aliases = [var.cloudfront_domain_name]
+
+  # Attach WAF ACL
+  web_acl_id = aws_wafv2_web_acl.trip_planner_cloudfront_waf.arn
 
   depends_on = [
     aws_s3_bucket.s3_bucket,
