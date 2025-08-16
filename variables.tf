@@ -97,7 +97,17 @@ variable "hosted_zone_id" {
   type        = string
 }
 
-variable "blocked_bots" {
+variable "blocked_bots_waf_cloudfront" {
   type    = list(string)
   default = ["Nikto", "SQLMap", "ZAP", "Hydra", "Masscan"]
+}
+
+variable "blocked_bots_waf_alb" {
+  type = list(string)
+  default = [
+    "AhrefsBot",
+    "SemrushBot",
+    "MJ12bot",
+    "DotBot"
+  ]
 }

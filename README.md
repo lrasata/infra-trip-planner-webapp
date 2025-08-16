@@ -164,6 +164,6 @@ This part of the infra sets up an AWS **CloudFront distribution** to serve a **S
 
 ## TODO tasks
 - [ ] Integrate 3 different envs : `dev | stage | prod`
-- [ ] Add firewall AWS WAF for Cloudfront and the ALB of the Backend API
+- [x] ~~Add firewall AWS WAF for Cloudfront and the ALB of the Backend API~~
 - [ ] Audit performance of TripPlannerAPI and leverage caching strategy
 - [ ] For monitoring purpose on TripPlannerAPI, deploy [Monitoring services](https://github.com/lrasata/monitoring-services) built with Prometheus and Grafana --> define value
