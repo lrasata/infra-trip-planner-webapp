@@ -61,7 +61,7 @@ resource "aws_ecs_task_definition" "task-trip-planner" {
       environment = [
         { name = "ENVIRONMENT", value = "production" },
         { name = "SPRING_DATASOURCE_URL", value = "jdbc:postgresql://${module.db.db_instance_address}:5432/${var.database_name}" },
-        { name = "ALLOWED_ORIGIN", value = var.allowed_origin },
+        { name = "ALLOWED_ORIGINS", value = var.allowed_origins },
         { name = "COOKIE_SECURE_ATTRIBUTE", value = tostring(var.cookie_secure_attribute) }, # for boolean, must explicitly convert the boolean to a string
         { name = "COOKIE_SAME_SITE", value = var.cookie_same_site },
         { name = "SUPER_ADMIN_FULLNAME", value = var.super_admin_fullname }
@@ -165,7 +165,7 @@ resource "aws_appautoscaling_policy" "ecs_service_cpu_policy" {
   service_namespace  = aws_appautoscaling_target.ecs_service_scaling_target.service_namespace
 
   target_tracking_scaling_policy_configuration {
-    target_value       = 50.0
+    target_value = 50.0
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
