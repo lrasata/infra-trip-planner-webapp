@@ -1,6 +1,6 @@
 module "db" {
   source     = "terraform-aws-modules/rds/aws"
-  identifier = "db-trip-planner"
+  identifier = "${var.environment}-db-trip-planner"
 
   engine            = "postgres"
   engine_version    = "15.7"
@@ -23,12 +23,12 @@ module "db" {
 
 
 resource "aws_db_subnet_group" "rds_subnet_group" {
-  name       = "trip-planner-rds-subnet-group"
+  name       = "${var.environment}-trip-planner-rds-subnet-group"
   subnet_ids = module.vpc.private_subnets # At least two subnets in different AZs
 }
 
 resource "aws_security_group" "sg_rds" {
-  name        = "rds-sg"
+  name        = "${var.environment}-rds-sg"
   description = "Allow ECS tasks access to database and internet"
   vpc_id      = module.vpc.vpc_id
 

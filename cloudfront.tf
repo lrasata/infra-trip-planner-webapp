@@ -6,12 +6,12 @@ resource "aws_cloudfront_distribution" "cdn" {
   origin {
     domain_name              = aws_s3_bucket.s3_bucket.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id # ensures that CloudFront can access the S3 bucket without making it public
-    origin_id                = "s3-bucket-origin"
+    origin_id                = "${var.environment}-s3-bucket-origin"
   }
 
   origin {
     domain_name = module.alb.lb_dns_name
-    origin_id   = "alb-origin"
+    origin_id   = "${var.environment}-alb-origin"
 
     custom_origin_config {
       origin_protocol_policy = "https-only"
@@ -23,7 +23,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
   origin {
     domain_name = var.api_locations_domain_name
-    origin_id   = "api-gateway-origin"
+    origin_id   = "${var.environment}-api-gateway-origin"
 
     custom_origin_config {
       http_port              = 80
@@ -41,7 +41,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   # Default behavior for frontend (S3)
   # -------------------------
   default_cache_behavior {
-    target_origin_id       = "s3-bucket-origin"
+    target_origin_id       = "${var.environment}-s3-bucket-origin"
     viewer_protocol_policy = "redirect-to-https"
 
     allowed_methods = ["GET", "HEAD", "OPTIONS"]
@@ -72,7 +72,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   # -------------------------
   ordered_cache_behavior {
     path_pattern           = "/api/*"
-    target_origin_id       = "alb-origin"
+    target_origin_id       = "${var.environment}-alb-origin"
     viewer_protocol_policy = "redirect-to-https"
 
     allowed_methods = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
@@ -94,7 +94,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
   ordered_cache_behavior {
     path_pattern           = "/auth/*"
-    target_origin_id       = "alb-origin"
+    target_origin_id       = "${var.environment}-alb-origin"
     viewer_protocol_policy = "redirect-to-https"
 
     allowed_methods = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
@@ -116,7 +116,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
   ordered_cache_behavior {
     path_pattern           = "/locations*"
-    target_origin_id       = "api-gateway-origin"
+    target_origin_id       = "${var.environment}-api-gateway-origin"
     allowed_methods        = ["HEAD", "GET", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
     viewer_protocol_policy = "redirect-to-https"
@@ -155,7 +155,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 }
 
 resource "aws_cloudfront_origin_access_control" "oac" {
-  name                              = "s3-oac"
+  name                              = "${var.environment}-s3-oac"
   description                       = "Access control for frontend S3"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
@@ -166,7 +166,7 @@ resource "aws_cloudfront_origin_access_control" "oac" {
 # ROUTE 53 ALIAS RECORD
 # -------------------------
 data "aws_route53_zone" "main" {
-  name         = "epic-trip-planner.com"
+  name         = "epic-trip-planner.com" # this has to be static to allow retrieval of the  Route 53 Hosted Zone
   private_zone = false
 }
 

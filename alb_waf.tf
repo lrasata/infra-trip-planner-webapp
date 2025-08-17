@@ -1,5 +1,5 @@
 resource "aws_wafv2_web_acl" "alb_waf" {
-  name        = "trip-planner-alb-waf"
+  name        = "${var.environment}-trip-planner-alb-waf"
   description = "WAF for ALB"
   scope       = "REGIONAL"
   default_action {
@@ -8,13 +8,13 @@ resource "aws_wafv2_web_acl" "alb_waf" {
 
   visibility_config {
     cloudwatch_metrics_enabled = true
-    metric_name                = "tripPlannerAlbWAF"
+    metric_name                = "${var.environment}-tripPlannerAlbWAF"
     sampled_requests_enabled   = true
   }
 
   # Managed rule group (common protections)
   rule {
-    name     = "AWSManagedRulesCommonRuleSet"
+    name     = "${var.environment}-AWSManagedRulesCommonRuleSet"
     priority = 1
 
     override_action {
@@ -30,7 +30,7 @@ resource "aws_wafv2_web_acl" "alb_waf" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "managedRules"
+      metric_name                = "${var.environment}-managedRules"
       sampled_requests_enabled   = true
     }
   }
@@ -39,7 +39,7 @@ resource "aws_wafv2_web_acl" "alb_waf" {
   dynamic "rule" {
     for_each = var.blocked_bots_waf_cloudfront
     content {
-      name     = "Block${rule.value}"
+      name     = "${var.environment}-Block${rule.value}"
       priority = 100 + index(var.blocked_bots_waf_cloudfront, rule.value) # safe offset
 
       statement {
@@ -64,7 +64,7 @@ resource "aws_wafv2_web_acl" "alb_waf" {
 
       visibility_config {
         cloudwatch_metrics_enabled = true
-        metric_name                = "Block${rule.value}"
+        metric_name                = "${var.environment}-Block${rule.value}"
         sampled_requests_enabled   = true
       }
     }
@@ -72,7 +72,7 @@ resource "aws_wafv2_web_acl" "alb_waf" {
 
   # Rate limiting per IP
   rule {
-    name     = "RateLimitPerIP"
+    name     = "${var.environment}-RateLimitPerIP"
     priority = 200
 
     action {
@@ -88,7 +88,7 @@ resource "aws_wafv2_web_acl" "alb_waf" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "rateLimit"
+      metric_name                = "${var.environment}-rateLimit"
       sampled_requests_enabled   = true
     }
   }

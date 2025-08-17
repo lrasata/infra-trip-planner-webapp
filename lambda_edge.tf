@@ -11,7 +11,7 @@ data "archive_file" "lambda_edge_zip" {
 resource "aws_lambda_function" "spa_fallback" {
   provider      = aws.us_east_1 # Lambda@Edge must be in us-east-1
   filename      = data.archive_file.lambda_edge_zip.output_path
-  function_name = "spa_fallback"
+  function_name = "${var.environment}-spa-fallback"
   role          = aws_iam_role.lambda_edge_role.arn
   handler       = "index.handler"
   runtime       = "nodejs20.x"
@@ -19,7 +19,7 @@ resource "aws_lambda_function" "spa_fallback" {
 }
 
 resource "aws_iam_role" "lambda_edge_role" {
-  name = "lambda_edge_role"
+  name = "${var.environment}-lambda-edge-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

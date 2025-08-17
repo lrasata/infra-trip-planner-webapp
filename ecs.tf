@@ -1,6 +1,6 @@
 module "ecs_cluster" {
   source       = "terraform-aws-modules/ecs/aws"
-  cluster_name = "ecs-cluster-trip-design"
+  cluster_name = "${var.environment}-ecs-cluster-trip-design"
 
   default_capacity_provider_strategy = {}
 }
@@ -33,13 +33,13 @@ resource "aws_iam_role_policy_attachment" "ecs_secrets_policy" {
 }
 
 resource "aws_cloudwatch_log_group" "ecs_trip_planner" {
-  name              = "/ecs/trip-planner-app"
+  name              = "${var.environment}/ecs/trip-planner-app"
   retention_in_days = 7
 }
 
 # --- ECS Task Definition ---
 resource "aws_ecs_task_definition" "task-trip-planner" {
-  family                   = "task-trip-planner"
+  family                   = "${var.environment}-task-trip-planner"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = "256"
@@ -49,7 +49,7 @@ resource "aws_ecs_task_definition" "task-trip-planner" {
 
   container_definitions = jsonencode([
     {
-      name      = "trip-planner-container",
+      name      = "${var.environment}-trip-planner-container",
       image     = var.container_image,
       essential = true,
       portMappings = [
@@ -101,7 +101,7 @@ resource "aws_ecs_task_definition" "task-trip-planner" {
 }
 
 resource "aws_ecs_service" "ecs_service_trip_design" {
-  name            = "ecs-service-trip-planner"
+  name            = "${var.environment}-ecs-service-trip-planner"
   cluster         = module.ecs_cluster.cluster_id
   task_definition = aws_ecs_task_definition.task-trip-planner.arn
   desired_count   = 3 #  must be >= min_capacity of the scaling target
@@ -113,7 +113,7 @@ resource "aws_ecs_service" "ecs_service_trip_design" {
   }
   load_balancer {
     target_group_arn = module.alb.target_group_arns[0]
-    container_name   = "trip-planner-container"
+    container_name   = "${var.environment}-trip-planner-container"
     container_port   = 8080
   }
   health_check_grace_period_seconds = 120
@@ -126,7 +126,7 @@ resource "aws_ecs_service" "ecs_service_trip_design" {
 }
 
 resource "aws_security_group" "sg_ecs" {
-  name        = "ecs-sg"
+  name        = "${var.environment}-ecs-sg"
   description = "Allow outbound for ECS tasks and ALB to access ECS Tasks"
   vpc_id      = module.vpc.vpc_id
 
@@ -158,7 +158,7 @@ resource "aws_appautoscaling_target" "ecs_service_scaling_target" {
 
 # Define a scaling policy based on CPU utilization
 resource "aws_appautoscaling_policy" "ecs_service_cpu_policy" {
-  name               = "cpu-scaling-policy"
+  name               = "${var.environment}-cpu-scaling-policy"
   policy_type        = "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.ecs_service_scaling_target.resource_id
   scalable_dimension = aws_appautoscaling_target.ecs_service_scaling_target.scalable_dimension

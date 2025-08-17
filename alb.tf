@@ -6,7 +6,7 @@ module "alb" {
   source  = "terraform-aws-modules/alb/aws"
   version = "8.7.0"
 
-  name               = "alb-trip-planner"
+  name               = "${var.environment}-alb-trip-planner"
   load_balancer_type = "application"
   vpc_id             = module.vpc.vpc_id
   subnets            = module.vpc.public_subnets
@@ -63,7 +63,7 @@ resource "aws_lb_listener" "http_redirect" {
 }
 
 resource "aws_security_group" "sg_alb" {
-  name        = "alb-sg"
+  name        = "${var.environment}-alb-sg"
   description = "Allow HTTPS"
   vpc_id      = module.vpc.vpc_id
 

@@ -5,7 +5,7 @@ data "archive_file" "lambda_zip" {
 }
 
 resource "aws_iam_role" "lambda_exec" {
-  name = "lambda_exec_role"
+  name = "${var.environment}-lambda-exec-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -25,7 +25,7 @@ resource "aws_iam_role_policy_attachment" "lambda_secrets_policy_attach" {
 }
 
 resource "aws_lambda_function" "locations_api" {
-  function_name = "location-api-lambda"
+  function_name = "${var.environment}-location-api-lambda"
   runtime       = "nodejs20.x"
   handler       = "handler.handler" # file.function exported
 
@@ -48,7 +48,7 @@ resource "aws_lambda_function" "locations_api" {
 }
 
 resource "aws_iam_policy" "lambda_secrets_access" {
-  name        = "lambda_secretsmanager_access"
+  name        = "${var.environment}-lambda-secretsmanager-access"
   description = "Allow Lambda to access Secrets Manager"
 
   policy = jsonencode({
