@@ -111,3 +111,8 @@ variable "blocked_bots_waf_alb" {
     "DotBot"
   ]
 }
+
+variable "notification_email" {
+  description = "Email address for notifications"
+  type        = string
+}

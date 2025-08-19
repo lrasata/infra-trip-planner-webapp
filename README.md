@@ -59,7 +59,18 @@ The backend is a **Spring Boot application** that serves the Trip Planner Web Ap
 
 **Monitoring**
 - ECS logs are streamed to **AWS CloudWatch Logs** for real-time monitoring and troubleshooting.
-
+- **AWS CloudWatch Alarms + SNS** are set up to monitor :
+  - ECS service :
+     - Alert when ECS CPU utilization exceeds 90% 
+     - Alert when ECS Memory utilization exceeds 90%
+     - Alert when ECS service has unhealthy tasks
+  - RDS database :
+     - Alert when RDS free storage space is low
+     - Alert when DB has CPU utilization of 0% for 5 minutes - RDS is potentially down
+  - ALB :
+     - ALB target group has unhealthy hosts
+     - Alert when ALB has too many 5xx errors
+     - Alert when ALB has high latency (over 2 seconds)
 
 ## 🔍 Gotchas -  Lessons learned ( sometimes the hard way...)
 ### RDS - Database
@@ -119,6 +130,14 @@ Locations API has been created to provide an API endpoint to call for the fronte
 - Managed AWS services like Lambda and API Gateway provide built-in high availability.
 - Error handling and CORS headers are implemented to prevent client-side failures.
 
+**Monitoring**
+- **AWS CloudWatch Alarms + SNS** are set up to monitor :
+  - Api gateway :
+    - Alert when API Gateway 5xx errors spike
+    - Alert when API Gateway latency is high
+  - Lambda function :
+    - Alert when Lambda has errors
+
 ## Env variables and secret API key
 
 **Local development**
@@ -176,25 +195,30 @@ This part of the infrastructure sets up an AWS **CloudFront distribution** to se
 <img src="docs/frontend-diagram.png" alt="trip-planner-frontend-infra">
 
 ## Key Attributes
-### Security
+**Security**
 - S3 bucket blocks all public access.
 - CloudFront Origin Access Control (OAC) ensures only CloudFront can access the S3 bucket.
 - Lambda@Edge uses minimal IAM permissions via `AWSLambdaBasicExecutionRole`.
 - Custom header : `X-Custom-Auth`is injected by CloudFront to securely communicate with `LocationsAPI`.
 
-### Maintainability
+**Maintainability**
 - Lambda@Edge centralizes route handling for SPA, reducing manual S3 configuration.
 - Versioning enabled on S3 allows easy rollback of static assets.
 
-### Scalability
+**Scalability**
 - **CloudFront CDN** caches content globally, reducing latency and improving user experience.
 - Static content served from S3 scales automatically with traffic.
 - Lambda@Edge executes at edge locations, distributing the load worldwide.
 
-### Reliability
+**Reliability**
 - CloudFront + S3 + Lambda@Edge provides high availability and low downtime.
 - HTTPS is enabled with ACM certificates, ensuring secure and reliable access.
 
+**Monitoring**
+- **AWS CloudWatch Alarms + SNS** are set up to monitor :
+  - Cloudfront distribution :
+    - Alert when CloudFront has too many 5xx errors
+  
 ## 🔎 Gotcha - Notes
 - Build the frontend with `npm run build` and sync the `./dist` folder to S3 before deployment.
 - Lambda@Edge must be deployed in `us-east-1`, the only region supporting it.
