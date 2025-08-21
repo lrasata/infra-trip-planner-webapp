@@ -2,18 +2,6 @@ resource "aws_s3_bucket" "s3_bucket" {
   bucket = "${var.environment}-${var.bucket_name}"
 }
 
-resource "aws_s3_bucket_website_configuration" "s3-bucket-website" {
-  bucket = aws_s3_bucket.s3_bucket.id
-
-  index_document {
-    suffix = "index.html"
-  }
-
-  error_document {
-    key = "index.html"
-  }
-}
-
 # this is the build directory for the static files - after running `npm run build`
 # it should contain the static files to be uploaded to S3
 resource "null_resource" "upload_static_files" {
@@ -23,26 +11,6 @@ resource "null_resource" "upload_static_files" {
     command = "aws s3 sync ./dist/ s3://${aws_s3_bucket.s3_bucket.bucket}"
   }
 }
-
-resource "aws_s3_bucket_policy" "s3_bucket_policy" {
-  bucket = aws_s3_bucket.s3_bucket.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "cloudfront.amazonaws.com"
-        }
-        Action   = "s3:GetObject"
-        Resource = "${aws_s3_bucket.s3_bucket.arn}/*"
-      }
-    ]
-  })
-}
-
-
 
 data "aws_iam_policy_document" "s3_policy" {
   statement {
@@ -60,6 +28,11 @@ data "aws_iam_policy_document" "s3_policy" {
       values   = [aws_cloudfront_distribution.cdn.arn]
     }
   }
+}
+
+resource "aws_s3_bucket_policy" "s3_bucket_policy" {
+  bucket = aws_s3_bucket.s3_bucket.id
+  policy = data.aws_iam_policy_document.s3_policy.json
 }
 
 #  Block public access to the S3 bucket

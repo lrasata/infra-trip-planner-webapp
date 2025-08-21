@@ -13,10 +13,10 @@
     - SUPER_ADMIN_PASSWORD : Password of the super admin user for TripPlannerAPI
     - GEO_DB_RAPID_API_KEY : RapidAPI key for GeoDB
     - CUSTOM_AUTH_SECRET : Secret value of header X-Custom-Auth to request data from LocationsAPI
-  - Build folder `dist/` is copied in the root of the project, it contains the compiled frontend application (trip-planner-web-app).
-    - Trip-planner-web-app has been built with correct environment variables set:
-      - VITE_API_URL : e.g. `VITE_API_URL=https://alb.epic-trip-planner.com`
-      - VITE_API_LOCATIONS : e.g. `VITE_API_LOCATIONS=https://epic-trip-planner.com/locations`
+- Build folder `dist/` is copied in the root of the project, it contains the compiled frontend application (trip-planner-web-app).
+  - Trip-planner-web-app has been built with correct environment variables set:
+    - VITE_API_URL : e.g. `VITE_API_URL=https://alb.epic-trip-planner.com`
+    - VITE_API_LOCATIONS : e.g. `VITE_API_LOCATIONS=https://epic-trip-planner.com/locations`
 
 
 ## Getting Started

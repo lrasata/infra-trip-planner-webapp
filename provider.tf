@@ -3,8 +3,8 @@ terraform {
     organization = "lrasata"
 
     workspaces {
-      project = "Learn Terraform"
-      name = "learn-terraform-aws-get-started"
+      project = "Infra Trip planner webapp"
+      name = "infra-trip-planner-webapp"
     }
   }*/
 
