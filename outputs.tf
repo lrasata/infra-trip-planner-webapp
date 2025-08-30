@@ -1,6 +1,6 @@
 output "api_gateway_invoke_url" {
   description = "Public URL for invoking the API Gateway"
-  value       = "https://${var.api_locations_domain_name}/${aws_api_gateway_stage.prod.stage_name}/locations"
+  value       = "https://${var.api_locations_domain_name}/locations"
 }
 
 output "alb_dns_name" {
