@@ -31,6 +31,10 @@ The application includes:
 
 The architecture is designed to be **robust, secure, and scalable**, leveraging AWS managed services to reduce operational overhead.
 
+**Diagram - new version**
+<img src="docs/full-diagram-v2.png" alt="trip-planner-infrastructure-v2">
+
+**Diagram - old version**
 <img src="docs/full-diagram.png" alt="trip-planner-infrastructure">
 
 # Backend infrastructure (TripPlannerAPI)

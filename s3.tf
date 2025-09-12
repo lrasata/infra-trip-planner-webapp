@@ -1,5 +1,6 @@
 resource "aws_s3_bucket" "s3_bucket" {
   bucket = "${var.environment}-${var.bucket_name}"
+  region = var.region
 }
 
 # this is the build directory for the static files - after running `npm run build`

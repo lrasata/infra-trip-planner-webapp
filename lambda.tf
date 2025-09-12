@@ -27,7 +27,7 @@ resource "aws_iam_role_policy_attachment" "lambda_secrets_policy_attach" {
 resource "aws_lambda_function" "locations_api" {
   function_name = "${var.environment}-location-api-lambda"
   runtime       = "nodejs20.x"
-  handler       = "handler.handler" # file.function exported
+  handler       = "index.handler" # file.function exported
 
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
