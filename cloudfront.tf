@@ -15,7 +15,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
     custom_origin_config {
       origin_protocol_policy = "https-only"
-      http_port              = 80
+      http_port              = 80 # required by Terraform but dont get confused only https is used
       https_port             = 443
       origin_ssl_protocols   = ["TLSv1.2"]
     }
@@ -26,9 +26,9 @@ resource "aws_cloudfront_distribution" "cdn" {
     origin_id   = "${var.environment}-api-gateway-origin"
 
     custom_origin_config {
-      http_port              = 80
-      https_port             = 443
       origin_protocol_policy = "https-only"
+      http_port              = 80 # required by Terraform but dont get confused only https is used
+      https_port             = 443
       origin_ssl_protocols   = ["TLSv1.2"]
     }
 
@@ -42,6 +42,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   # -------------------------
   default_cache_behavior {
     target_origin_id       = "${var.environment}-s3-bucket-origin"
+    # Ensure any HTTP request from a user is redirected to HTTPS.
     viewer_protocol_policy = "redirect-to-https"
 
     allowed_methods = ["GET", "HEAD", "OPTIONS"]
