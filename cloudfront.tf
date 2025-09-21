@@ -41,7 +41,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   # Default behavior for frontend (S3)
   # -------------------------
   default_cache_behavior {
-    target_origin_id       = "${var.environment}-s3-bucket-origin"
+    target_origin_id = "${var.environment}-s3-bucket-origin"
     # Ensure any HTTP request from a user is redirected to HTTPS.
     viewer_protocol_policy = "redirect-to-https"
 
