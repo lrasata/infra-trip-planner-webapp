@@ -29,4 +29,4 @@ override.tf.json
 .env
 dist
 *.zip
-lambda/node_modules
+lambda_process_uploaded_file_build

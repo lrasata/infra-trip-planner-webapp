@@ -2,22 +2,29 @@
 
 ## Prerequisites
 
-- **Terraform** >= 1.3 installed: https://www.terraform.io/downloads.html
-- Access to **AWS configured**
-- **Secret values** are configured saved in Secrets Manager:
-  - secrets : `${var.environment}/trip-planner-app/secrets`
-    - JWT_SECRET_KEY : TripPlannerAPI JWT secret
-    - SPRING_DATASOURCE_USERNAME : RDS database username
-    - SPRING_DATASOURCE_PASSWORD : RDS database password
-    - SUPER_ADMIN_EMAIL : Email of the super admin user for TripPlannerAPI
-    - SUPER_ADMIN_PASSWORD : Password of the super admin user for TripPlannerAPI
-    - GEO_DB_RAPID_API_KEY : RapidAPI key for GeoDB
-    - CUSTOM_AUTH_SECRET : Secret value of header X-Custom-Auth to request data from LocationsAPI
-- Build folder `dist/` is copied in the root of the project, it contains the **compiled frontend application (trip-planner-web-app).**
-  - Trip-planner-web-app has been built with correct environment variables set:
-    - VITE_API_URL : e.g. `VITE_API_URL=https://alb.epic-trip-planner.com`
-    - VITE_API_LOCATIONS : e.g. `VITE_API_LOCATIONS=https://epic-trip-planner.com/locations`
-- Plan and define **IPv4 adress range** used by the VPC which has 3 AZs and contains 3 Public subnets and 3 Private Subnets. You will have to provide those values as variables or default values will be applied.
+1. **Terraform** >= 1.3 installed: https://www.terraform.io/downloads.html
+2. Access to **AWS configured**
+3. **Secret values** are configured saved in Secrets Manager:
+   - secrets : `${var.environment}/trip-planner-app/secrets`
+     - JWT_SECRET_KEY : TripPlannerAPI JWT secret
+     - SPRING_DATASOURCE_USERNAME : RDS database username
+     - SPRING_DATASOURCE_PASSWORD : RDS database password
+     - SUPER_ADMIN_EMAIL : Email of the super admin user for TripPlannerAPI
+     - SUPER_ADMIN_PASSWORD : Password of the super admin user for TripPlannerAPI
+     - GEO_DB_RAPID_API_KEY : RapidAPI key for GeoDB
+     - API_GW_LOCATIONS_AUTH_SECRET : Secret value of header `x-api-gateway-locations-auth` to request data from LocationsAPI
+     - API_GW_IMG_UPLOAD_AUTH_SECRET : Secret value of header `x-api-gateway-img-upload-auth` to request presigned url for image upload
+4. Build folder `dist/` is copied in the root of the project, it contains the **compiled frontend application (trip-planner-web-app).**
+   - Trip-planner-web-app has been built with correct environment variables set:
+     - VITE_API_URL: e.g. `VITE_API_URL=https://staging-alb.epic-trip-planner.com`
+     - VITE_API_LOCATIONS: e.g. `VITE_API_LOCATIONS=https://staging.epic-trip-planner.com/locations`
+     - VITE_API_UPLOAD_MEDIA: e.g. `VITE_API_UPLOAD_MEDIA=https://staging.epic-trip-planner.com/upload-url`
+5. Download the lastest artifact from: https://github.com/lrasata/infra-image-uploader/tree/main/artifacts
+   - Unzip the artifact and copy the content inside a build folder such as `lambda_process_uploaded_file_build`
+     - <img src="./docs/build-structure-lambda-process-uploaded-file.png" alt="build-folder-structure"> 
+   - Update `image_uploader.tf` and to refer the build folder:
+     - `lambda_process_uploaded_file_dir = "./lambda_process_uploaded_file_build"`
+6. Plan and define **IPv4 adress range** used by the VPC which has 3 AZs and contains 3 Public subnets and 3 Private Subnets. You will have to provide those values as variables or default values will be applied.
 
 
 ## Getting Started

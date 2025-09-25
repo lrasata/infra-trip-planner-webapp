@@ -13,7 +13,12 @@ output "cloudfront_domain_name" {
   value       = aws_cloudfront_distribution.cdn.aliases
 }
 
-output "s3_bucket_name" {
+output "static_web_app_bucket_name" {
   description = "Name of the S3 bucket where static files are hosted"
-  value       = aws_s3_bucket.s3_bucket.bucket
+  value       = aws_s3_bucket.static_web_app_bucket.bucket
+}
+
+output "uploads_bucket_name" {
+  description = "Name of the S3 bucket where uploaded images are saved"
+  value       = module.image_uploader.uploads_bucket_id
 }

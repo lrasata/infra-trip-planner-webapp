@@ -4,7 +4,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   is_ipv6_enabled     = true
 
   origin {
-    domain_name              = aws_s3_bucket.s3_bucket.bucket_regional_domain_name
+    domain_name              = aws_s3_bucket.static_web_app_bucket.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id # ensures that CloudFront can access the S3 bucket without making it public
     origin_id                = "${var.environment}-s3-bucket-origin"
   }
@@ -23,7 +23,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
   origin {
     domain_name = var.api_locations_domain_name
-    origin_id   = "${var.environment}-api-gateway-origin"
+    origin_id   = "${var.environment}-locations-api-gateway-origin"
 
     custom_origin_config {
       origin_protocol_policy = "https-only"
@@ -33,8 +33,25 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
 
     custom_header {
-      name  = "X-Custom-Auth"
-      value = local.auth_secret
+      name  = "x-api-gateway-locations-auth"
+      value = local.locations_auth_secret
+    }
+  }
+
+  origin {
+    domain_name = var.api_image_upload_domain_name
+    origin_id   = "${var.environment}-image-uploader-api-gateway-origin"
+
+    custom_origin_config {
+      origin_protocol_policy = "https-only"
+      http_port              = 80 # required by Terraform but dont get confused only https is used
+      https_port             = 443
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+
+    custom_header {
+      name  = "x-api-gateway-img-upload-auth"
+      value = local.img_upload_auth_secret
     }
   }
   # -------------------------
@@ -69,7 +86,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   # -------------------------
-  # Behavior for backend/API (ALB)
+  # Behavior for backend (ALB)
   # -------------------------
   ordered_cache_behavior {
     path_pattern           = "/api/*"
@@ -115,9 +132,12 @@ resource "aws_cloudfront_distribution" "cdn" {
     compress = false
   }
 
+  # -------------------------
+  # Behavior for Locations API
+  # -------------------------
   ordered_cache_behavior {
     path_pattern           = "/locations*"
-    target_origin_id       = "${var.environment}-api-gateway-origin"
+    target_origin_id       = "${var.environment}-locations-api-gateway-origin"
     allowed_methods        = ["HEAD", "GET", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
     viewer_protocol_policy = "redirect-to-https"
@@ -128,7 +148,24 @@ resource "aws_cloudfront_distribution" "cdn" {
         forward = "none"
       }
     }
+  }
 
+  # -------------------------
+  # Behavior for Image-uploader API
+  # -------------------------
+  ordered_cache_behavior {
+    path_pattern           = "/upload-url*"
+    target_origin_id       = "${var.environment}-image-uploader-api-gateway-origin"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods         = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      query_string = true
+      cookies {
+        forward = "none"
+      }
+    }
   }
 
 
@@ -149,7 +186,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   web_acl_id = aws_wafv2_web_acl.trip_planner_cloudfront_waf.arn
 
   depends_on = [
-    aws_s3_bucket.s3_bucket,
+    aws_s3_bucket.static_web_app_bucket,
     aws_cloudfront_origin_access_control.oac,
     aws_lambda_function.spa_fallback
   ]
