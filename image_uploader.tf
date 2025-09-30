@@ -1,5 +1,5 @@
 module "image_uploader" {
-  source = "git::https://github.com/lrasata/infra-image-uploader//modules/image_uploader?ref=v1.0.20"
+  source = "git::https://github.com/lrasata/infra-image-uploader//modules/image_uploader?ref=v1.0.21"
 
   lambda_process_uploaded_file_dir = "./lambda_process_uploaded_file_build"
 
