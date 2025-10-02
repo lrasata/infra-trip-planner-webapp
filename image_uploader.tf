@@ -1,5 +1,5 @@
 module "image_uploader" {
-  source = "git::https://github.com/lrasata/infra-image-uploader//modules/image_uploader?ref=v1.0.21"
+  source = "git::https://github.com/lrasata/infra-image-uploader//modules/image_uploader?ref=v1.1.0"
 
   lambda_process_uploaded_file_dir = "./lambda_process_uploaded_file_build"
 
@@ -13,4 +13,6 @@ module "image_uploader" {
   use_bucketav                                  = var.use_bucketav
   bucketav_sns_findings_topic_name              = var.bucketav_sns_findings_topic_name
   lambda_memory_size_mb                         = var.lambda_memory_size_mb
+  dynamodb_partition_key                        = var.dynamodb_partition_key
+  dynamodb_sort_key                             = var.dynamodb_sort_key
 }

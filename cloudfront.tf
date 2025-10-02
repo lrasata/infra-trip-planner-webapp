@@ -6,7 +6,13 @@ resource "aws_cloudfront_distribution" "cdn" {
   origin {
     domain_name              = aws_s3_bucket.static_web_app_bucket.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id # ensures that CloudFront can access the S3 bucket without making it public
-    origin_id                = "${var.environment}-s3-bucket-origin"
+    origin_id                = "${var.environment}-s3-static-web-files-bucket-origin"
+  }
+
+  origin {
+    domain_name              = module.image_uploader.uploads_bucket_regional_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
+    origin_id                = "${var.environment}-s3-uploads-bucket-origin"
   }
 
   origin {
@@ -58,7 +64,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   # Default behavior for frontend (S3)
   # -------------------------
   default_cache_behavior {
-    target_origin_id = "${var.environment}-s3-bucket-origin"
+    target_origin_id = "${var.environment}-s3-static-web-files-bucket-origin"
     # Ensure any HTTP request from a user is redirected to HTTPS.
     viewer_protocol_policy = "redirect-to-https"
 
@@ -168,6 +174,57 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
+  # -------------------------
+  # Behavior for Image-uploader API for /uploads
+  # -------------------------
+  ordered_cache_behavior {
+    path_pattern           = "/uploads/*"
+    target_origin_id       = "${var.environment}-s3-uploads-bucket-origin"
+    viewer_protocol_policy = "redirect-to-https"
+
+    allowed_methods = ["GET", "HEAD", "OPTIONS"]
+    cached_methods  = ["GET", "HEAD"]
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl     = 0
+    default_ttl = 0
+    max_ttl     = 0
+
+    compress = true
+  }
+
+  # -------------------------
+  # Behavior for Image-uploader API for /thumbnails
+  # -------------------------
+  ordered_cache_behavior {
+    path_pattern           = "/thumbnails/*"
+    target_origin_id       = "${var.environment}-s3-uploads-bucket-origin"
+    viewer_protocol_policy = "redirect-to-https"
+
+    allowed_methods = ["GET", "HEAD", "OPTIONS"]
+    cached_methods  = ["GET", "HEAD"]
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+
+    # cached for performance, reduce CloudFront/S3 load.
+    min_ttl     = 60
+    default_ttl = 3600
+    max_ttl     = 86400
+    compress    = true
+  }
+
+
 
   restrictions {
     geo_restriction {
@@ -194,7 +251,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
 resource "aws_cloudfront_origin_access_control" "oac" {
   name                              = "${var.environment}-s3-oac"
-  description                       = "Access control for frontend S3"
+  description                       = "OAC for private S3 access"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"

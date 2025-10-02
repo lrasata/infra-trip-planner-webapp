@@ -181,3 +181,15 @@ variable "lambda_memory_size_mb" {
   type        = number
   default     = 512
 }
+
+variable "dynamodb_partition_key" {
+  description = "DynamoDB partition key"
+  type        = string
+  default     = "user_id"
+}
+
+variable "dynamodb_sort_key" {
+  description = "DynamoDB sort key"
+  type        = string
+  default     = "file_key"
+}
