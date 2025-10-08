@@ -22,6 +22,19 @@ resource "aws_iam_role" "ecs_task_execution_role" {
   })
 }
 
+
+# Attach AmazonS3FullAccess managed policy
+resource "aws_iam_role_policy_attachment" "ecs_task_s3_full_access" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+# Attach AmazonDynamoDBReadOnlyAccess managed policy
+resource "aws_iam_role_policy_attachment" "ecs_task_dynamodb_readonly" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess"
+}
+
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
@@ -64,7 +77,10 @@ resource "aws_ecs_task_definition" "task-trip-planner" {
         { name = "ALLOWED_ORIGINS", value = var.allowed_origins },
         { name = "COOKIE_SECURE_ATTRIBUTE", value = tostring(var.cookie_secure_attribute) }, # for boolean, must explicitly convert the boolean to a string
         { name = "COOKIE_SAME_SITE", value = var.cookie_same_site },
-        { name = "SUPER_ADMIN_FULLNAME", value = var.super_admin_fullname }
+        { name = "SUPER_ADMIN_FULLNAME", value = var.super_admin_fullname },
+        { name = "AWS_REGION", value = var.region },
+        { name = "DYNAMODB_TABLE_NAME", value = module.image_uploader.dynamo_db_table_name },
+        { name = "S3_BUCKET_NAME", value = module.image_uploader.uploads_bucket_id }
       ],
       secrets = [
         {
