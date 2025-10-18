@@ -193,3 +193,9 @@ variable "dynamodb_sort_key" {
   type        = string
   default     = "file_key"
 }
+
+variable "quarantine_bucket_name" {
+  description = "S3 quarantine bucket name for flagged content"
+  type        = string
+  default     = "quarantine-bucket"
+}
