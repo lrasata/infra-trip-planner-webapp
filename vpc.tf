@@ -15,3 +15,27 @@ module "vpc" {
   enable_nat_gateway = true  # allow ECS tasks to pull images from ECR/Docker Hub and install updates
   single_nat_gateway = false # NATGW are AZ resilient, to have Region resilience, we want 1 NATGW per AZ. (route table is handled by the module)
 }
+
+# Use gateway endpoint to allow private access to DynamoDB
+resource "aws_vpc_endpoint" "dynamodb_gw_endpoint" {
+  vpc_id            = module.vpc.vpc_id
+  service_name      = "com.amazonaws.${var.region}.dynamodb"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = module.vpc.private_route_table_ids
+
+  tags = {
+    Environment = var.environment
+  }
+}
+
+# Use gateway endpoint to allow private access to s3
+resource "aws_vpc_endpoint" "s3_gw_endpoint" {
+  vpc_id            = module.vpc.vpc_id
+  service_name      = "com.amazonaws.${var.region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = module.vpc.private_route_table_ids
+
+  tags = {
+    Environment = var.environment
+  }
+}
