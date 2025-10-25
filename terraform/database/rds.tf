@@ -8,8 +8,8 @@ module "db" {
   allocated_storage = 20
 
   db_name  = var.database_name
-  username = local.datasource_username
-  password = local.datasource_password
+  username = data.terraform_remote_state.security.outputs.datasource_username
+  password = data.terraform_remote_state.security.outputs.datasource_password
   port     = 5432
 
   vpc_security_group_ids = [aws_security_group.sg_rds.id]
@@ -21,22 +21,21 @@ module "db" {
   family = "postgres15"
 }
 
-
 resource "aws_db_subnet_group" "rds_subnet_group" {
   name       = "${var.environment}-trip-planner-rds-subnet-group"
-  subnet_ids = module.vpc.private_subnets # At least two subnets in different AZs
+  subnet_ids = data.terraform_remote_state.networking.outputs.private_subnets # At least two subnets in different AZs
 }
 
 resource "aws_security_group" "sg_rds" {
   name        = "${var.environment}-rds-sg"
   description = "Allow ECS tasks access to database and internet"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.terraform_remote_state.networking.outputs.vpc_id
 
   ingress {
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
-    security_groups = [aws_security_group.sg_ecs.id]
+    cidr_blocks = []
   }
 
   egress {

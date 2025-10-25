@@ -65,7 +65,7 @@ resource "aws_lb_listener" "http_redirect" {
 resource "aws_security_group" "sg_alb" {
   name        = "${var.environment}-alb-sg"
   description = "Allow HTTPS"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.terraform_remote_state.networking.outputs.vpc_id
 
   ingress {
     from_port   = 443

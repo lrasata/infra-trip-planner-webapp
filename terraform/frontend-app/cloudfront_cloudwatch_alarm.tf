@@ -8,7 +8,7 @@ resource "aws_cloudwatch_metric_alarm" "cloudfront_5xx" {
   statistic           = "Average"
   threshold           = 1 # >1% errors
   alarm_description   = "Alert when CloudFront 5xx errors spike"
-  alarm_actions       = [aws_sns_topic.alerts.arn]
+  alarm_actions       = [data.terraform_remote_state.backend_app.outputs.sns_topic_arn]
 
   dimensions = {
     DistributionId = aws_cloudfront_distribution.cdn.id

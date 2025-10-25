@@ -73,7 +73,7 @@ resource "aws_ecs_task_definition" "task-trip-planner" {
       ],
       environment = [
         { name = "ENVIRONMENT", value = "production" },
-        { name = "SPRING_DATASOURCE_URL", value = "jdbc:postgresql://${module.db.db_instance_address}:5432/${var.database_name}" },
+        { name = "SPRING_DATASOURCE_URL", value = "jdbc:postgresql://${data.terraform_remote_state.database.outputs.db_instance_address}:5432/${data.terraform_remote_state.database.outputs.db_name}" },
         { name = "ALLOWED_ORIGINS", value = var.allowed_origins },
         { name = "COOKIE_SECURE_ATTRIBUTE", value = tostring(var.cookie_secure_attribute) }, # for boolean, must explicitly convert the boolean to a string
         { name = "COOKIE_SAME_SITE", value = var.cookie_same_site },
@@ -85,23 +85,23 @@ resource "aws_ecs_task_definition" "task-trip-planner" {
       secrets = [
         {
           name      = "SPRING_DATASOURCE_USERNAME"
-          valueFrom = "${data.aws_secretsmanager_secret.trip_design_secrets.arn}:SPRING_DATASOURCE_USERNAME::"
+          valueFrom = "${data.terraform_remote_state.security.outputs.secrets_arn}:SPRING_DATASOURCE_USERNAME::"
         },
         {
           name      = "SPRING_DATASOURCE_PASSWORD"
-          valueFrom = "${data.aws_secretsmanager_secret.trip_design_secrets.arn}:SPRING_DATASOURCE_PASSWORD::"
+          valueFrom = "${data.terraform_remote_state.security.outputs.secrets_arn}:SPRING_DATASOURCE_PASSWORD::"
         },
         {
           name      = "JWT_SECRET_KEY"
-          valueFrom = "${data.aws_secretsmanager_secret.trip_design_secrets.arn}:JWT_SECRET_KEY::"
+          valueFrom = "${data.terraform_remote_state.security.outputs.secrets_arn}:JWT_SECRET_KEY::"
         },
         {
           name      = "SUPER_ADMIN_EMAIL"
-          valueFrom = "${data.aws_secretsmanager_secret.trip_design_secrets.arn}:SUPER_ADMIN_EMAIL::"
+          valueFrom = "${data.terraform_remote_state.security.outputs.secrets_arn}:SUPER_ADMIN_EMAIL::"
         },
         {
           name      = "SUPER_ADMIN_PASSWORD"
-          valueFrom = "${data.aws_secretsmanager_secret.trip_design_secrets.arn}:SUPER_ADMIN_PASSWORD::"
+          valueFrom = "${data.terraform_remote_state.security.outputs.secrets_arn}:SUPER_ADMIN_PASSWORD::"
         }
       ]
       logConfiguration = {
@@ -123,7 +123,7 @@ resource "aws_ecs_service" "ecs_service_trip_design" {
   desired_count   = 3 #  must be >= min_capacity of the scaling target
   launch_type     = "FARGATE"
   network_configuration {
-    subnets          = module.vpc.private_subnets
+    subnets          = data.terraform_remote_state.networking.outputs.private_subnets
     security_groups  = [aws_security_group.sg_ecs.id]
     assign_public_ip = false
   }
@@ -136,15 +136,14 @@ resource "aws_ecs_service" "ecs_service_trip_design" {
 
 
   depends_on = [
-    module.alb,
-    module.db
-  ] # ensures ALB and DB are created before ECS
+    module.alb
+  ] # ensures ALB
 }
 
 resource "aws_security_group" "sg_ecs" {
   name        = "${var.environment}-ecs-sg"
   description = "Allow outbound for ECS tasks and ALB to access ECS Tasks"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.terraform_remote_state.networking.outputs.vpc_id
 
   # Allow traffic from the ALB on port 8080
   ingress {
@@ -188,4 +187,28 @@ resource "aws_appautoscaling_policy" "ecs_service_cpu_policy" {
     scale_in_cooldown  = 60
     scale_out_cooldown = 60
   }
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_policy" "secrets_access" {
+  name = "${var.environment}-trip-planner-secrets-iam-policy"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:GetSecretValue"
+        ],
+        "Resource" : "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:${var.environment}/trip-planner-app/secrets-*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_secrets_policy_attach" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.secrets_access.arn
 }

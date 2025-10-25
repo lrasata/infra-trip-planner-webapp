@@ -5,13 +5,13 @@ resource "aws_s3_bucket" "static_web_app_bucket" {
 
 # this is the build directory for the static files - after running `npm run build`
 # it should contain the static files to be uploaded to S3
-resource "null_resource" "upload_static_files" {
-  depends_on = [aws_s3_bucket.static_web_app_bucket]
-
-  provisioner "local-exec" {
-    command = "aws s3 sync ./dist/ s3://${aws_s3_bucket.static_web_app_bucket.bucket}"
-  }
-}
+# resource "null_resource" "upload_static_files" {
+#   depends_on = [aws_s3_bucket.static_web_app_bucket]
+#
+#   provisioner "local-exec" {
+#     command = "aws s3 sync ./dist/ s3://${aws_s3_bucket.static_web_app_bucket.bucket}"
+#   }
+# }
 
 data "aws_iam_policy_document" "static_web_app_policy_document" {
   statement {

@@ -120,8 +120,8 @@ hosted_zone_id =
 Plan and apply for a specific environment:
 
 ````text
-terraform plan -var-file="staging.tfvars"
-terraform apply -var-file="staging.tfvars"
+terraform plan -var-file="../common/staging.tfvars"
+terraform apply -var-file="../common/staging.tfvars"
 ````
 
 ## Important Files
