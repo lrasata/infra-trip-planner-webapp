@@ -7,6 +7,11 @@ terraform {
       name = "infra-trip-planner-webapp"
     }
   }*/
+  backend "s3" {
+    bucket = "trip-planner-states"
+    key    = "security/terraform.tfstate"
+    region = "eu-central-1"
+  }
 
   required_providers {
     aws = {
@@ -26,5 +31,3 @@ provider "aws" {
   alias  = "us_east_1"
   region = "us-east-1"
 }
-
-data "aws_caller_identity" "current" {}

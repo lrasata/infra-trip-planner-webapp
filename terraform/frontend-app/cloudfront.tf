@@ -10,13 +10,13 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   origin {
-    domain_name              = module.image_uploader.uploads_bucket_regional_domain_name
+    domain_name              = data.terraform_remote_state.backend_app.outputs.uploads_bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
     origin_id                = "${var.environment}-s3-uploads-bucket-origin"
   }
 
   origin {
-    domain_name = module.alb.lb_dns_name
+    domain_name = data.terraform_remote_state.backend_app.outputs.alb_lb_dns_name
     origin_id   = "${var.environment}-alb-origin"
 
     custom_origin_config {
@@ -40,7 +40,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
     custom_header {
       name  = "x-api-gateway-locations-auth"
-      value = local.locations_auth_secret
+      value = data.terraform_remote_state.security.outputs.locations_auth_secret
     }
   }
 
@@ -57,7 +57,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
     custom_header {
       name  = "x-api-gateway-img-upload-auth"
-      value = local.img_upload_auth_secret
+      value = data.terraform_remote_state.security.outputs.img_upload_auth_secret
     }
   }
   # -------------------------
@@ -243,7 +243,6 @@ resource "aws_cloudfront_distribution" "cdn" {
   web_acl_id = aws_wafv2_web_acl.trip_planner_cloudfront_waf.arn
 
   depends_on = [
-    aws_s3_bucket.static_web_app_bucket,
     aws_cloudfront_origin_access_control.oac,
     aws_lambda_function.spa_fallback
   ]

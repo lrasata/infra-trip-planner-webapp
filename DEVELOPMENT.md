@@ -24,7 +24,7 @@
      - <img src="./docs/build-structure-lambda-process-uploaded-file.png" alt="build-folder-structure"> 
    - Update `image_uploader.tf` and to refer the build folder:
      - `lambda_process_uploaded_file_dir = "./lambda_process_uploaded_file_build"`
-6. Plan and define **IPv4 adress range** used by the VPC which has 3 AZs and contains 3 Public subnets and 3 Private Subnets. You will have to provide those values as variables or default values will be applied.
+6. Plan and define **IPv4 address range** used by the VPC which has 3 AZs and contains 3 Public subnets and 3 Private Subnets. You will have to provide those values as variables or default values will be applied.
 
 
 ## Getting Started
@@ -36,32 +36,14 @@ git clone https://github.com/lrasata/infra-trip-design-app.git
 cd infra-trip-design-app
 ```
 
-**2. Initialize Terraform:**
+**2. Define environment-specific values:**
 
-````bash
-terraform init
-````
+This project uses `.tfvars` files to handle multiple environments (e.g., dev, staging, prod). Environment-specific values like ALB names, domains, and certificates are defined in these files.
 
-**3. Fromat configuration:**
-
-````bash
-terraform fmt
-````
-
-**4. Validate configuration:**
-
-````bash
-terraform validate
-````
-
-**5. Choose your environment and plan/apply:**
-
-This project uses .tfvars files to handle multiple environments (e.g., dev, staging, prod). Environment-specific values like ALB names, domains, and certificates are defined in these files.
-
-**Example .tfvars files:**
+**Define .tfvars files in `terraform/common` folder:**
 
 ````text
-# staging.tfvars
+# terraform/common/staging.tfvars
 region              = "eu-central-1"
 azs                 = ["eu-central-1a", "eu-central-1b", "eu-central-1c"]
 vpc_cidr            = "10.0.0.0/16"
@@ -91,7 +73,7 @@ hosted_zone_id =
 ````
 
 ````text
-# prod.tfvars
+# terraform/common/prod.tfvars
 region = "eu-central-1"
 
 environment               = "prod"
@@ -117,32 +99,35 @@ cloudfront_certificate_arn =
 hosted_zone_id = 
 ````
 
+**3. Initialize Terraform:**
+
+Create s3 bucket which will be used to store Terraform state files:
+
+````bash
+aws s3 mb s3://trip-planner-states --region eu-central-1
+````
+
+It is recommended to initialize and deploy each layout in the following order:
+1. `terraform/security`
+2. `terraform/networking`
+3. `terraform/database`
+4. `terraform/backend-app`
+5. `terraform/frontend-app`
+
+Move to the specified folder, example: `terraform/security` folder and run:
+````bash
+terraform init
+
+# format configuration and validate configuration
+terraform fmt
+terraform validate
+````
+
 Plan and apply for a specific environment:
 
 ````text
-terraform plan -var-file="staging.tfvars"
-terraform apply -var-file="staging.tfvars"
-````
-
-## Important Files
-
-````text
-infra-trip-design-app/
-├── cloudfront.tf                   
-├── ecs.tf  
-├── api-gateway.tf                    
-├── alb.tf 
-├── lambda.tf
-├── lambda/handler.js              # Lambda function handler  
-├── lambda_edge.tf
-├── spa_fallback/index.html  # SPA fallback for CloudFront                 
-├── rds.tf                  
-├── s3.tf    
-├── secrets-manager.tf     
-├── vpc.tf                   
-├── variables.tf                  # Input variables
-├── outputs.tf                    # Output values
-├── .terraform.lock.hcl           # provider dependency lock
+terraform plan -var-file="../common/staging.tfvars" -compact-warnings
+terraform apply -var-file="../common/staging.tfvars" -compact-warnings
 ````
 
 ## Notes
@@ -155,7 +140,12 @@ infra-trip-design-app/
 To tear down all resources managed by this project:
 
 ````bash
-terraform destroy -var-file="staging.tfvars"
+terraform destroy -var-file="../common/staging.tfvars" 
+````
+or run:
+
+````bash
+./scripts/deploy.sh destroy -auto-approve
 ````
 
 Replace staging.tfvars with the appropriate tfvars environment file.

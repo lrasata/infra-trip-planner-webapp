@@ -8,8 +8,8 @@ module "alb" {
 
   name               = "${var.environment}-alb-trip-planner"
   load_balancer_type = "application"
-  vpc_id             = module.vpc.vpc_id
-  subnets            = module.vpc.public_subnets
+  vpc_id             = data.terraform_remote_state.networking.outputs.vpc_id
+  subnets            = data.terraform_remote_state.networking.outputs.public_subnets
   security_groups    = [aws_security_group.sg_alb.id]
 
   target_groups = [
@@ -65,7 +65,7 @@ resource "aws_lb_listener" "http_redirect" {
 resource "aws_security_group" "sg_alb" {
   name        = "${var.environment}-alb-sg"
   description = "Allow HTTPS"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.terraform_remote_state.networking.outputs.vpc_id
 
   ingress {
     from_port   = 443
