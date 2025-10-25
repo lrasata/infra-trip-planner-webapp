@@ -14,7 +14,7 @@
      - GEO_DB_RAPID_API_KEY : RapidAPI key for GeoDB
      - API_GW_LOCATIONS_AUTH_SECRET : Secret value of header `x-api-gateway-locations-auth` to request data from LocationsAPI
      - API_GW_IMG_UPLOAD_AUTH_SECRET : Secret value of header `x-api-gateway-img-upload-auth` to request presigned url for image upload
-4. Build folder `dist/` is copied in the root of the project, it contains the **compiled frontend application (trip-planner-web-app).**
+4. The **Trip-planner-web-app** has been built and synced with the s3 bucket by the [CI/CD pipeline](https://github.com/lrasata/trip-planner-web-app/actions/workflows/release.yml:
    - Trip-planner-web-app has been built with correct environment variables set:
      - VITE_API_URL: e.g. `VITE_API_URL=https://staging-alb.epic-trip-planner.com`
      - VITE_API_LOCATIONS: e.g. `VITE_API_LOCATIONS=https://staging.epic-trip-planner.com/locations`
