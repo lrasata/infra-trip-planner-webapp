@@ -24,7 +24,7 @@
      - <img src="./docs/build-structure-lambda-process-uploaded-file.png" alt="build-folder-structure"> 
    - Update `image_uploader.tf` and to refer the build folder:
      - `lambda_process_uploaded_file_dir = "./lambda_process_uploaded_file_build"`
-6. Plan and define **IPv4 adress range** used by the VPC which has 3 AZs and contains 3 Public subnets and 3 Private Subnets. You will have to provide those values as variables or default values will be applied.
+6. Plan and define **IPv4 address range** used by the VPC which has 3 AZs and contains 3 Public subnets and 3 Private Subnets. You will have to provide those values as variables or default values will be applied.
 
 
 ## Getting Started
@@ -120,29 +120,8 @@ hosted_zone_id =
 Plan and apply for a specific environment:
 
 ````text
-terraform plan -var-file="../common/staging.tfvars"
-terraform apply -var-file="../common/staging.tfvars"
-````
-
-## Important Files
-
-````text
-infra-trip-design-app/
-├── cloudfront.tf                   
-├── ecs.tf  
-├── api-gateway.tf                    
-├── alb.tf 
-├── lambda.tf
-├── lambda/handler.js              # Lambda function handler  
-├── lambda_edge.tf
-├── spa_fallback/index.html  # SPA fallback for CloudFront                 
-├── rds.tf                  
-├── s3.tf    
-├── secrets-manager.tf     
-├── vpc.tf                   
-├── variables.tf                  # Input variables
-├── outputs.tf                    # Output values
-├── .terraform.lock.hcl           # provider dependency lock
+terraform plan -var-file="../common/staging.tfvars" -compact-warnings
+terraform apply -var-file="../common/staging.tfvars" -compact-warnings
 ````
 
 ## Notes

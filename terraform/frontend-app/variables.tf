@@ -67,3 +67,15 @@ variable "GEO_DB_RAPID_API_HOST" {
   description = "The host for the GeoDB Rapid API"
   type        = string
 }
+
+#------------- Image moderator --------------------------------
+variable "quarantine_bucket_name" {
+  description = "S3 quarantine bucket name for flagged content"
+  type        = string
+  default     = "quarantine-bucket"
+}
+
+variable "notification_email" {
+  description = "Email address for notifications"
+  type        = string
+}

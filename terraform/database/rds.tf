@@ -3,7 +3,7 @@ module "db" {
   identifier = "${var.environment}-db-trip-planner"
 
   engine            = "postgres"
-  engine_version    = "15.7"
+  engine_version    = "15"
   instance_class    = "db.t3.micro"
   allocated_storage = 20
 
@@ -32,9 +32,9 @@ resource "aws_security_group" "sg_rds" {
   vpc_id      = data.terraform_remote_state.networking.outputs.vpc_id
 
   ingress {
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
     cidr_blocks = []
   }
 

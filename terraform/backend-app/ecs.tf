@@ -162,6 +162,15 @@ resource "aws_security_group" "sg_ecs" {
   }
 }
 
+resource "aws_security_group_rule" "ecs_to_rds" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  security_group_id         = data.terraform_remote_state.database.outputs.rds_sg_id
+  source_security_group_id  = aws_security_group.sg_ecs.id
+}
+
 # Create an Application Auto Scaling Target
 resource "aws_appautoscaling_target" "ecs_service_scaling_target" {
   max_capacity       = 5

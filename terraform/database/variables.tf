@@ -15,3 +15,8 @@ variable "region" {
   type        = string
   default     = "eu-central-1"
 }
+
+variable "notification_email" {
+  description = "Email address for notifications"
+  type        = string
+}

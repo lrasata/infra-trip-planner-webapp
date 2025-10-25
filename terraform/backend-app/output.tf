@@ -2,6 +2,10 @@ output "uploads_bucket_id" {
   value = module.image_uploader.uploads_bucket_id
 }
 
+output "uploads_bucket_arn" {
+  value = module.image_uploader.uploads_bucket_arn
+}
+
 output "uploads_bucket_regional_domain_name" {
   value = module.image_uploader.uploads_bucket_regional_domain_name
 }
