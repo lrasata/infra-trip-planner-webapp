@@ -127,8 +127,23 @@ Plan and apply for a specific environment:
 
 ````text
 terraform plan -var-file="../common/staging.tfvars" -compact-warnings
-terraform apply -var-file="../common/staging.tfvars" -compact-warnings
+terraform apply -var-file="../common/staging.tfvars" -compact-warnings -auto-approve
 ````
+
+#### Specific commands for the database
+
+Apply and take a manual snapshots of the RDS database:
+
+````text
+terraform apply -var-file="../common/staging.tfvars" -target="aws_db_snapshot.pre_destroy" -compact-warnings -auto-approve
+````
+
+Recreate DB from snapshot, by providing `restore_snapshot_id=<your-snapshot-id>` in `../common/staging.tfvars` and run : 
+
+````text
+terraform apply -var-file="../common/staging.tfvars" -compact-warnings -auto-approve
+````
+
 
 ## Notes
 
@@ -138,14 +153,15 @@ terraform apply -var-file="../common/staging.tfvars" -compact-warnings
 ## Destroying Infrastructure
 
 To tear down all resources managed by this project:
-
 ````bash
-terraform destroy -var-file="../common/staging.tfvars" 
+terraform destroy -var-file="../common/staging.tfvars" -compact-warnings -auto-approve
 ````
 or run:
 
 ````bash
 ./scripts/deploy.sh destroy -auto-approve
 ````
+> AWS will create a final snapshot of the rds database automatically because skip_final_snapshot = false.
+
 
 Replace staging.tfvars with the appropriate tfvars environment file.

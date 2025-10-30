@@ -20,3 +20,9 @@ variable "notification_email" {
   description = "Email address for notifications"
   type        = string
 }
+
+variable "restore_snapshot_id" {
+  description = "Optional snapshot ID to restore from (leave empty on first deploy)"
+  type        = string
+  default     = ""
+}
