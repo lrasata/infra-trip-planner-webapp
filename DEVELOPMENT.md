@@ -130,13 +130,7 @@ terraform plan -var-file="../common/staging.tfvars" -compact-warnings
 terraform apply -var-file="../common/staging.tfvars" -compact-warnings -auto-approve
 ````
 
-#### Specific commands for the database
-
-Apply and take a manual snapshots of the RDS database:
-
-````text
-terraform apply -var-file="../common/staging.tfvars" -target="aws_db_snapshot.pre_destroy" -compact-warnings -auto-approve
-````
+#### Instruction to restore database from snapshot
 
 Recreate DB from snapshot, by providing `restore_snapshot_id=<your-snapshot-id>` in `../common/staging.tfvars` and run : 
 

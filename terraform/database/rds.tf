@@ -1,12 +1,3 @@
-# Resource to take a manual snapshot before destroy
-resource "aws_db_snapshot" "pre_destroy" {
-  db_instance_identifier = "${var.environment}-db-trip-planner"
-  db_snapshot_identifier = "${var.environment}-db-trip-planner-pre-destroy-${formatdate("YYYYMMDDhhmmss", timestamp())}"
-
-  # DB exists first
-  depends_on = [module.db]
-}
-
 module "db" {
   source     = "terraform-aws-modules/rds/aws"
   identifier = "${var.environment}-db-trip-planner"
