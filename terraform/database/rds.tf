@@ -2,6 +2,9 @@ module "db" {
   source     = "terraform-aws-modules/rds/aws"
   identifier = "${var.environment}-db-trip-planner"
 
+  # Restore from snapshot if provided, else create new DB
+  snapshot_identifier = var.restore_db_snapshot_id != "" ? var.restore_db_snapshot_id : null
+
   engine            = "postgres"
   engine_version    = "15"
   instance_class    = "db.t3.micro"
@@ -15,10 +18,11 @@ module "db" {
   vpc_security_group_ids = [aws_security_group.sg_rds.id]
   db_subnet_group_name   = aws_db_subnet_group.rds_subnet_group.name
 
-  publicly_accessible = false
-  skip_final_snapshot = true
-
   family = "postgres15"
+
+  publicly_accessible = false
+  skip_final_snapshot = false
+  deletion_protection = true
 }
 
 resource "aws_db_subnet_group" "rds_subnet_group" {
