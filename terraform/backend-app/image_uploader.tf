@@ -1,5 +1,5 @@
 module "image_uploader" {
-  source = "git::https://github.com/lrasata/infra-image-uploader//modules/image_uploader?ref=v1.2.0"
+  source = "git::https://github.com/lrasata/infra-image-uploader//modules/image_uploader?ref=feature/backup-dynamo-db"
 
   lambda_process_uploaded_file_dir = "./lambda_process_uploaded_file_build"
 
@@ -15,4 +15,5 @@ module "image_uploader" {
   lambda_memory_size_mb                         = var.lambda_memory_size_mb
   dynamodb_partition_key                        = var.dynamodb_partition_key
   dynamodb_sort_key                             = var.dynamodb_sort_key
+  dynamodb_backup_arn                           = ""
 }

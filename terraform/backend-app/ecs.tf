@@ -116,7 +116,7 @@ resource "aws_ecs_task_definition" "task-trip-planner" {
   ])
 }
 
-resource "aws_ecs_service" "ecs_service_trip_design" {
+resource "aws_ecs_service" "ecs_service_trip_planner" {
   name            = "${var.environment}-ecs-service-trip-planner"
   cluster         = module.ecs_cluster.cluster_id
   task_definition = aws_ecs_task_definition.task-trip-planner.arn
@@ -175,7 +175,7 @@ resource "aws_security_group_rule" "ecs_to_rds" {
 resource "aws_appautoscaling_target" "ecs_service_scaling_target" {
   max_capacity       = 5
   min_capacity       = 2
-  resource_id        = "service/${module.ecs_cluster.cluster_name}/${aws_ecs_service.ecs_service_trip_design.name}"
+  resource_id        = "service/${module.ecs_cluster.cluster_name}/${aws_ecs_service.ecs_service_trip_planner.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
 }
