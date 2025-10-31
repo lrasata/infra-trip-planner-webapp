@@ -3,7 +3,7 @@ module "db" {
   identifier = "${var.environment}-db-trip-planner"
 
   # Restore from snapshot if provided, else create new DB
-  snapshot_identifier = var.restore_snapshot_id != "" ? var.restore_snapshot_id : null
+  snapshot_identifier = var.restore_db_snapshot_id != "" ? var.restore_db_snapshot_id : null
 
   engine            = "postgres"
   engine_version    = "15"

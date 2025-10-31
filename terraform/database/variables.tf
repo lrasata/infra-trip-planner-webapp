@@ -21,7 +21,7 @@ variable "notification_email" {
   type        = string
 }
 
-variable "restore_snapshot_id" {
+variable "restore_db_snapshot_id" {
   description = "Optional snapshot ID to restore from (leave empty on first deploy)"
   type        = string
   default     = ""

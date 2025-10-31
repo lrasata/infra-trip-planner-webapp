@@ -70,6 +70,20 @@ backend_certificate_arn    =
 cloudfront_certificate_arn = 
 
 hosted_zone_id = 
+
+notification_email = 
+
+# image uploader variables
+api_image_upload_domain_name                  = "staging-api-image-upload.epic-trip-planner.com"
+uploads_bucket_name                           = "trip-planner-app-media-uploads-bucket"
+enable_transfer_acceleration                  = true
+lambda_upload_presigned_url_expiration_time_s = 300 # 5min
+use_bucketav                                  = false
+bucketav_sns_findings_topic_name              = ""
+dynamodb_partition_key                        = "trip_id"
+dynamodb_sort_key                             = "file_key"
+
+restore_rds_snapshot_id                       = 
 ````
 
 ````text
@@ -96,7 +110,21 @@ bucket_name = "trip-planner-app-bucket"
 backend_certificate_arn    = 
 cloudfront_certificate_arn = 
 
-hosted_zone_id = 
+hosted_zone_id =
+
+notification_email = 
+
+# image uploader variables
+api_image_upload_domain_name                  = "api-image-upload.epic-trip-planner.com"
+uploads_bucket_name                           = "trip-planner-app-media-uploads-bucket"
+enable_transfer_acceleration                  = true
+lambda_upload_presigned_url_expiration_time_s = 300 # 5min
+use_bucketav                                  = false
+bucketav_sns_findings_topic_name              = ""
+dynamodb_partition_key                        = "trip_id"
+dynamodb_sort_key                             = "file_key"
+
+restore_rds_snapshot_id                       =
 ````
 
 **3. Initialize Terraform:**
