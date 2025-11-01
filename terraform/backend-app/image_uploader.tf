@@ -15,5 +15,4 @@ module "image_uploader" {
   lambda_memory_size_mb                         = var.lambda_memory_size_mb
   dynamodb_partition_key                        = var.dynamodb_partition_key
   dynamodb_sort_key                             = var.dynamodb_sort_key
-  dynamodb_backup_arn                           = ""
 }

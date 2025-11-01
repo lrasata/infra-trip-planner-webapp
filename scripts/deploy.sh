@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-set -e  # stop on error
-
+set -e
+# stop on error
 LAYERS_APPLY=(
+  "security"
   "networking"
   "database"
   "backend-app"
@@ -9,9 +10,11 @@ LAYERS_APPLY=(
 )
 
 LAYERS_DESTROY=(
+  "frontend-app"
   "backend-app"
   "database"
   "networking"
+  "security"
 )
 
 ACTION=${1:-apply}
