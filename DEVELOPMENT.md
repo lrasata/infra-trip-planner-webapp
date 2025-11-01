@@ -172,6 +172,19 @@ terraform apply -var-file="../common/staging.tfvars" -compact-warnings -auto-app
 - Always review the output of terraform plan before applying changes.
 - Keep .terraform.lock.hcl committed for consistent provider versions.
 
+## Backup and restore DynamoDB table
+### Create a backup of DynamoDB table
+
+````bash
+./scripts/backup_dynamodb.sh staging-files-metadata backup-staging-files-metadata-20251101-1820
+````
+
+### Restore a backup of DynamoDB table
+
+````bash
+./scripts/restore_dynamodb_backup.sh staging-files-metadata staging-temp-table arn:aws:dynamodb:eu-central-1:<id>:table/staging-files-metadata/backup/<id>
+````
+
 ## Destroying Infrastructure
 
 To tear down all resources managed by this project:
