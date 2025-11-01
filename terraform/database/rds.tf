@@ -3,7 +3,7 @@ module "db" {
   identifier = "${var.environment}-db-trip-planner"
 
   # Restore from snapshot if provided, else create new DB
-  snapshot_identifier = var.restore_db_snapshot_id != "" ? var.restore_db_snapshot_id : null # only for production
+  snapshot_identifier = var.restore_db_snapshot_id != "" ? var.restore_db_snapshot_id : null
 
   engine            = "postgres"
   engine_version    = "15"
@@ -21,7 +21,7 @@ module "db" {
   family = "postgres15"
 
   publicly_accessible = false
-  skip_final_snapshot = false # only for production
+  skip_final_snapshot = false
   deletion_protection = true
 }
 
