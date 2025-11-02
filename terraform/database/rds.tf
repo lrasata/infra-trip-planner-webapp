@@ -7,8 +7,11 @@ module "db" {
 
   engine            = "postgres"
   engine_version    = "15"
-  instance_class    = "db.t3.micro"
-  allocated_storage = 20
+  instance_class    = var.environment == "prod" ? "db.t3.medium" : "db.t3.micro"
+  allocated_storage = var.environment == "prod" ? 50 : 20
+  storage_encrypted        = var.environment == "prod" ? true : false
+  multi_az                 = true
+  backup_retention_period  = var.environment == "prod" ? 7 : 0
 
   db_name  = var.database_name
   username = data.terraform_remote_state.security.outputs.datasource_username
@@ -21,8 +24,8 @@ module "db" {
   family = "postgres15"
 
   publicly_accessible = false
-  skip_final_snapshot = false
-  deletion_protection = true
+  skip_final_snapshot = false # take snapshot before destroy, only restorable if the networking layer did not change
+  deletion_protection = true # prevent accidental deletion
 }
 
 resource "aws_db_subnet_group" "rds_subnet_group" {
