@@ -1,5 +1,5 @@
 module "image_moderator" {
-  source = "git::https://github.com/lrasata/infra-s3-image-moderator//modules/s3_image_moderator?ref=v1.0.0"
+  source = "git::https://github.com/lrasata/infra-s3-image-moderator//modules/s3_image_moderator?ref=v1.1.0"
 
   region                    = var.region
   environment               = var.environment
