@@ -22,7 +22,7 @@
 
 
 # Overview
-This repository manages the infrastructure for the Trip Planner application using **Terraform** on **AWS**.
+This repository manages the infrastructure for the [Trip Planner web application](https://github.com/lrasata/trip-planner-web-app) using **Terraform** on **AWS**.
 
 The application includes:
 - Backend API (Fargate on ECS + RDS)
