@@ -58,11 +58,11 @@ variable "notification_email" {
   type        = string
 }
 
-#-------------- Image uploader variables -----------------------------------------------
-variable "api_image_upload_domain_name" {
-  description = "The domain name for the API to get pre-signed image upload URLs"
+#-------------- File uploader variables -----------------------------------------------
+variable "api_file_upload_domain_name" {
+  description = "The domain name for the API to get pre-signed file upload URLs"
   type        = string
-  default     = "api-image-upload.epic-trip-planner.com"
+  default     = "api-file-upload.epic-trip-planner.com"
 }
 
 variable "backend_certificate_arn" {
@@ -103,16 +103,4 @@ variable "lambda_memory_size_mb" {
   description = "Memory size in MB value for Lambda processing file which allow faster execution"
   type        = number
   default     = 512
-}
-
-variable "dynamodb_partition_key" {
-  description = "DynamoDB partition key"
-  type        = string
-  default     = "user_id"
-}
-
-variable "dynamodb_sort_key" {
-  description = "DynamoDB sort key"
-  type        = string
-  default     = "file_key"
 }

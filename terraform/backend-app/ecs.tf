@@ -79,8 +79,8 @@ resource "aws_ecs_task_definition" "task-trip-planner" {
         { name = "COOKIE_SAME_SITE", value = var.cookie_same_site },
         { name = "SUPER_ADMIN_FULLNAME", value = var.super_admin_fullname },
         { name = "AWS_REGION", value = var.region },
-        { name = "DYNAMODB_TABLE_NAME", value = module.image_uploader.dynamo_db_table_name },
-        { name = "S3_BUCKET_NAME", value = module.image_uploader.uploads_bucket_id }
+        { name = "DYNAMODB_TABLE_NAME", value = module.file_uploader.dynamo_db_table_name },
+        { name = "S3_BUCKET_NAME", value = module.file_uploader.uploads_bucket_id }
       ],
       secrets = [
         {
@@ -167,8 +167,8 @@ resource "aws_security_group_rule" "ecs_to_rds" {
   from_port                = 5432
   to_port                  = 5432
   protocol                 = "tcp"
-  security_group_id         = data.terraform_remote_state.database.outputs.rds_sg_id
-  source_security_group_id  = aws_security_group.sg_ecs.id
+  security_group_id        = data.terraform_remote_state.database.outputs.rds_sg_id
+  source_security_group_id = aws_security_group.sg_ecs.id
 }
 
 # Create an Application Auto Scaling Target

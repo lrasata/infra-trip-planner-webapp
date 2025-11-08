@@ -45,7 +45,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   origin {
-    domain_name = var.api_image_upload_domain_name
+    domain_name = var.api_file_upload_domain_name
     origin_id   = "${var.environment}-image-uploader-api-gateway-origin"
 
     custom_origin_config {
@@ -175,7 +175,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   # -------------------------
-  # Behavior for Image-uploader API for /uploads
+  # Behavior for file-uploader API for /uploads
   # -------------------------
   ordered_cache_behavior {
     path_pattern           = "/uploads/*"
@@ -200,7 +200,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   # -------------------------
-  # Behavior for Image-uploader API for /thumbnails
+  # Behavior for file-uploader API for /thumbnails
   # -------------------------
   ordered_cache_behavior {
     path_pattern           = "/thumbnails/*"

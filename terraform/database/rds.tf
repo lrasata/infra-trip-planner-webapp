@@ -8,10 +8,10 @@ module "db" {
   engine            = "postgres"
   engine_version    = "15"
   instance_class    = var.environment == "prod" ? "db.t3.medium" : "db.t3.micro"
-  allocated_storage = var.environment == "prod" ? 50 : 20
+  allocated_storage = var.environment == "prod" ? 50 : 20 # GB
   storage_encrypted        = var.environment == "prod" ? true : false
   multi_az                 = true
-  backup_retention_period  = var.environment == "prod" ? 7 : 0
+  backup_retention_period  = var.environment == "prod" ? 7 : 0 # number of days
 
   db_name  = var.database_name
   username = data.terraform_remote_state.security.outputs.datasource_username
