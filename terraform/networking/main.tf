@@ -5,7 +5,7 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.1.0"
 
-  name = "${var.environment}-vpc-trip-planner"
+  name = "${var.environment}-${var.app_id}-vpc"
   cidr = var.vpc_cidr
 
   azs             = var.azs

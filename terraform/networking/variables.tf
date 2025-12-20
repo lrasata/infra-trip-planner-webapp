@@ -10,6 +10,11 @@ variable "region" {
   default     = "eu-central-1"
 }
 
+variable "app_id" {
+  description = "Name which identify the deployed app"
+  type        = string
+}
+
 variable "azs" {
   description = "List of availability zones in the region"
   type        = list(string)

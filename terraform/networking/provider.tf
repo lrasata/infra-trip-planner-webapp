@@ -1,12 +1,4 @@
 terraform {
-  /*cloud {
-    organization = "lrasata"
-
-    workspaces {
-      project = "Infra Trip planner webapp"
-      name = "infra-trip-planner-webapp"
-    }
-  }*/
   backend "s3" {
     bucket = "trip-planner-states"
     key    = "networking/terraform.tfstate"
