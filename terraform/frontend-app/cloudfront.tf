@@ -139,43 +139,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   # -------------------------
-  # Behavior for Locations API
-  # -------------------------
-  ordered_cache_behavior {
-    path_pattern           = "/locations*"
-    target_origin_id       = "${var.environment}-locations-api-gateway-origin"
-    allowed_methods        = ["HEAD", "GET", "OPTIONS"]
-    cached_methods         = ["GET", "HEAD"]
-    viewer_protocol_policy = "redirect-to-https"
-
-    forwarded_values {
-      query_string = true
-      cookies {
-        forward = "none"
-      }
-    }
-  }
-
-  # -------------------------
-  # Behavior for Image-uploader API
-  # -------------------------
-  ordered_cache_behavior {
-    path_pattern           = "/upload-url*"
-    target_origin_id       = "${var.environment}-image-uploader-api-gateway-origin"
-    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-    cached_methods         = ["GET", "HEAD"]
-    viewer_protocol_policy = "redirect-to-https"
-
-    forwarded_values {
-      query_string = true
-      cookies {
-        forward = "none"
-      }
-    }
-  }
-
-  # -------------------------
-  # Behavior for file-uploader API for /uploads
+  # Behavior for /uploads endpoint to fetch files from backend (Spring boot app)
   # -------------------------
   ordered_cache_behavior {
     path_pattern           = "/uploads/*"
@@ -200,7 +164,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   # -------------------------
-  # Behavior for file-uploader API for /thumbnails
+  # Behavior for /thumbnails endpoint to fetch files from backend (Spring boot app)
   # -------------------------
   ordered_cache_behavior {
     path_pattern           = "/thumbnails/*"
@@ -208,7 +172,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     viewer_protocol_policy = "redirect-to-https"
 
     allowed_methods = ["GET", "HEAD", "OPTIONS"]
-    cached_methods  = ["GET", "HEAD"]
+    cached_methods = ["GET", "HEAD"]
 
     forwarded_values {
       query_string = false
@@ -224,7 +188,41 @@ resource "aws_cloudfront_distribution" "cdn" {
     compress    = true
   }
 
+  # -------------------------
+  # Behavior for Locations API
+  # -------------------------
+  ordered_cache_behavior {
+    path_pattern           = "/locations*"
+    target_origin_id       = "${var.environment}-locations-api-gateway-origin"
+    allowed_methods        = ["HEAD", "GET", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
 
+    forwarded_values {
+      query_string = true
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  # -------------------------
+  # Behavior for File-uploader API GW to upload files
+  # -------------------------
+  ordered_cache_behavior {
+    path_pattern           = "/upload-url*"
+    target_origin_id       = "${var.environment}-image-uploader-api-gateway-origin"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods         = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      query_string = true
+      cookies {
+        forward = "none"
+      }
+    }
+  }
 
   restrictions {
     geo_restriction {
@@ -237,6 +235,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
+
   aliases = [var.cloudfront_domain_name]
 
   # Attach WAF ACL
