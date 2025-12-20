@@ -1,15 +1,15 @@
-# -------------------------
+####################################################################################################################
 # ALB : Application Load Balancer - exposes the backend service
 # This module creates an Application Load Balancer (ALB) with a target group and listener
-# -------------------------
-module "alb" {
+####################################################################################################################
+module "terraform_aws_alb" {
   source  = "terraform-aws-modules/alb/aws"
   version = "8.7.0"
 
-  name               = "${var.environment}-alb-trip-planner"
+  name               = "${var.environment}-${var.app_id}-alb"
   load_balancer_type = "application"
-  vpc_id             = data.terraform_remote_state.networking.outputs.vpc_id
-  subnets            = data.terraform_remote_state.networking.outputs.public_subnets
+  vpc_id             = var.vpc_id
+  subnets            = var.public_subnets
   security_groups    = [aws_security_group.sg_alb.id]
 
   target_groups = [
@@ -48,7 +48,7 @@ module "alb" {
 }
 
 resource "aws_lb_listener" "http_redirect" {
-  load_balancer_arn = module.alb.lb_arn
+  load_balancer_arn = module.terraform_aws_alb.lb_arn
   port              = 80
   protocol          = "HTTP"
 
@@ -65,7 +65,7 @@ resource "aws_lb_listener" "http_redirect" {
 resource "aws_security_group" "sg_alb" {
   name        = "${var.environment}-alb-sg"
   description = "Allow HTTPS"
-  vpc_id      = data.terraform_remote_state.networking.outputs.vpc_id
+  vpc_id      = var.vpc_id
 
   ingress {
     from_port   = 443
@@ -90,8 +90,8 @@ resource "aws_route53_record" "alb_domain" {
   type    = "A"
 
   alias {
-    name                   = module.alb.lb_dns_name
-    zone_id                = module.alb.lb_zone_id
+    name                   = module.terraform_aws_alb.lb_dns_name
+    zone_id                = module.terraform_aws_alb.lb_zone_id
     evaluate_target_health = true
   }
 }

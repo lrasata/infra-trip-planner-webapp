@@ -1,0 +1,84 @@
+module "ecs_cluster" {
+  source       = "terraform-aws-modules/ecs/aws"
+  cluster_name = "${var.environment}-${var.app_id}-ecs-cluster"
+
+  default_capacity_provider_strategy = {}
+}
+
+# ECS - Task Execution Role
+module "ecs_task_execution_role" {
+  source = "./modules/ecs_task_execution_role"
+
+  app_id      = var.app_id
+  region      = var.region
+  environment = var.environment
+}
+
+# ECS - Task Definition
+module "ecs_task_definition" {
+  source = "./modules/ecs_task_definition"
+
+
+  allowed_origins         = var.allowed_origins
+  app_id                  = var.app_id
+  container_image         = var.container_image
+  db_instance_address     = data.terraform_remote_state.database.outputs.db_instance_address
+  db_name                 = data.terraform_remote_state.database.outputs.db_name
+  dynamo_db_table_name    = module.file_uploader.dynamo_db_table_name
+  environment             = var.environment
+  region                  = var.region
+  s3_bucket_id            = module.file_uploader.uploads_bucket_id
+  secrets_arn             = data.terraform_remote_state.security.outputs.secrets_arn
+  super_admin_fullname    = var.super_admin_fullname
+  task_execution_role_arn = module.ecs_task_execution_role.task_exec_role_arn
+  cookie_same_site        = var.cookie_same_site
+  cookie_secure_attribute = var.cookie_secure_attribute
+}
+
+# ALB
+module "alb" {
+  source = "./modules/alb"
+
+  alb_domain_name         = var.alb_domain_name
+  app_id                  = var.app_id
+  backend_certificate_arn = var.backend_certificate_arn
+  environment             = var.environment
+  hosted_zone_id          = var.route53_zone_name
+  public_subnets          = data.terraform_remote_state.networking.outputs.public_subnets
+  vpc_id                  = data.terraform_remote_state.networking.outputs.vpc_id
+}
+
+# ECS Service
+module "ecs_service" {
+  source = "./modules/ecs_service"
+
+  alb_target_group_arns = module.alb.alb_target_group_arns
+  app_id                = var.app_id
+  cluster_id            = module.ecs_cluster.cluster_id
+  cluster_name          = module.ecs_cluster.cluster_name
+  environment           = var.environment
+  private_subnets       = data.terraform_remote_state.networking.outputs.private_subnets
+  sg_alb_id             = module.alb.sg_alb_id
+  sg_rds_id             = data.terraform_remote_state.database.outputs.rds_sg.id
+  task_definition_arn   = module.ecs_task_definition.task_definition_arn
+  vpc_id                = data.terraform_remote_state.networking.outputs.vpc_id
+}
+
+# File uploader
+module "file_uploader" {
+  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=v1.6.0"
+
+  region                                        = var.region
+  environment                                   = var.environment
+  api_file_upload_domain_name                   = var.api_file_upload_domain_name
+  backend_certificate_arn                       = var.backend_certificate_arn
+  uploads_bucket_name                           = var.uploads_bucket_name
+  enable_transfer_acceleration                  = var.enable_transfer_acceleration
+  lambda_upload_presigned_url_expiration_time_s = var.lambda_upload_presigned_url_expiration_time_s
+  lambda_memory_size_mb                         = var.lambda_memory_size_mb
+  bucket_av_sns_findings_topic_name             = var.bucketav_sns_findings_topic_name
+  notification_email                            = var.notification_email
+  route53_zone_name                             = var.route53_zone_name
+  secret_store_name                             = var.secret_store_name
+  use_bucket_av                                 = var.use_bucketav
+}

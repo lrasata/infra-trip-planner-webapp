@@ -10,13 +10,18 @@ variable "region" {
   default     = "eu-central-1"
 }
 
+variable "app_id" {
+  description = "Name which identifies the deployed app"
+  type        = string
+}
+
 variable "alb_domain_name" {
   description = "The domain name for the API"
   type        = string
   default     = "alb.epic-trip-planner.com"
 }
 
-variable "hosted_zone_id" {
+variable "route53_zone_name" {
   description = "Route 53 Hosted Zone ID for example.com"
   type        = string
 }
@@ -103,4 +108,8 @@ variable "lambda_memory_size_mb" {
   description = "Memory size in MB value for Lambda processing file which allow faster execution"
   type        = number
   default     = 512
+}
+
+variable "secret_store_name" {
+  type = string
 }
