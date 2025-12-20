@@ -5,13 +5,13 @@ module "db" {
   # Restore from snapshot if provided, else create new DB
   snapshot_identifier = var.restore_db_snapshot_id != "" ? var.restore_db_snapshot_id : null
 
-  engine            = "postgres"
-  engine_version    = "15"
-  instance_class    = var.environment == "prod" ? "db.t3.medium" : "db.t3.micro"
-  allocated_storage = var.environment == "prod" ? 50 : 20 # GB
-  storage_encrypted        = var.environment == "prod" ? true : false
-  multi_az                 = true
-  backup_retention_period  = var.environment == "prod" ? 7 : 0 # number of days
+  engine                  = "postgres"
+  engine_version          = "15"
+  instance_class          = var.environment == "prod" ? "db.t3.medium" : "db.t3.micro"
+  allocated_storage       = var.environment == "prod" ? 50 : 20 # GB
+  storage_encrypted       = var.environment == "prod" ? true : false
+  multi_az                = true
+  backup_retention_period = var.environment == "prod" ? 7 : 0 # number of days
 
   db_name  = var.database_name
   username = data.terraform_remote_state.security.outputs.datasource_username
@@ -25,7 +25,7 @@ module "db" {
 
   publicly_accessible = false
   skip_final_snapshot = false # take snapshot before destroy, only restorable if the networking layer did not change
-  deletion_protection = true # prevent accidental deletion
+  deletion_protection = true  # prevent accidental deletion
 }
 
 resource "aws_db_subnet_group" "rds_subnet_group" {

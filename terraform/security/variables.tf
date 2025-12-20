@@ -9,3 +9,8 @@ variable "region" {
   type        = string
   default     = "eu-central-1"
 }
+
+variable "app_id" {
+  description = "Name which identify the deployed app"
+  type        = string
+}

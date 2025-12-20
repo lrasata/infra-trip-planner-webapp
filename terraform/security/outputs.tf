@@ -19,6 +19,6 @@ output "img_upload_auth_secret" {
 }
 
 output "secrets_arn" {
-  value = data.aws_secretsmanager_secret_version.trip_planner_secrets_value.arn
+  value     = data.aws_secretsmanager_secret_version.app_secrets_value.arn
   sensitive = true
 }
