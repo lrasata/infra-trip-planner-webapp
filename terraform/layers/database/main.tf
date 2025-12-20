@@ -1,6 +1,6 @@
 module "db" {
   source     = "terraform-aws-modules/rds/aws"
-  identifier = "${var.environment}-db-trip-planner"
+  identifier = "${var.environment}-${var.app_id}-db"
 
   # Restore from snapshot if provided, else create new DB
   snapshot_identifier = var.restore_db_snapshot_id != "" ? var.restore_db_snapshot_id : null
@@ -29,12 +29,12 @@ module "db" {
 }
 
 resource "aws_db_subnet_group" "rds_subnet_group" {
-  name       = "${var.environment}-trip-planner-rds-subnet-group"
+  name       = "${var.environment}-${var.app_id}-rds-subnet-group"
   subnet_ids = data.terraform_remote_state.networking.outputs.private_subnets # At least two subnets in different AZs
 }
 
 resource "aws_security_group" "sg_rds" {
-  name        = "${var.environment}-rds-sg"
+  name        = "${var.environment}-${var.app_id}-rds-sg"
   description = "Allow ECS tasks access to database and internet"
   vpc_id      = data.terraform_remote_state.networking.outputs.vpc_id
 

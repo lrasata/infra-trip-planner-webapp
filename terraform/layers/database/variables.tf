@@ -7,13 +7,17 @@ variable "environment" {
 variable "database_name" {
   description = "database name"
   type        = string
-  default     = "tripdb"
 }
 
 variable "region" {
   description = "The AWS region to deploy resources"
   type        = string
   default     = "eu-central-1"
+}
+
+variable "app_id" {
+  description = "Name which identifies the deployed app"
+  type        = string
 }
 
 variable "notification_email" {

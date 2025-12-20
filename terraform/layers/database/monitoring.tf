@@ -1,3 +1,14 @@
+# SNS
+module "rds_sns_alerts" {
+  source = "../../common/modules/sns"
+
+  environment        = var.environment
+  notification_email = var.notification_email
+  app_id             = var.app_id
+  service_name       = module.db.db_instance_identifier
+}
+
+# cloudwatch alarms
 resource "aws_cloudwatch_metric_alarm" "rds_free_storage" {
   alarm_name          = "${var.environment}-RDS-Free-Storage-Low"
   comparison_operator = "LessThanThreshold"
@@ -8,7 +19,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_free_storage" {
   statistic           = "Average"
   threshold           = 2000000000 # ~2GB left
   alarm_description   = "Alert when RDS free storage space is low"
-  alarm_actions       = [aws_sns_topic.alerts.arn]
+  alarm_actions       = [module.rds_sns_alerts.sns_topic_alerts_arn]
 
   dimensions = {
     DBInstanceIdentifier = module.db.db_instance_identifier
@@ -25,7 +36,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_availability" {
   statistic           = "Average"
   threshold           = 0
   alarm_description   = "Alert when DB has CPU utilization of 0% for 5 minutes- RDS is potentially down"
-  alarm_actions       = [aws_sns_topic.alerts.arn]
+  alarm_actions       = [module.rds_sns_alerts.sns_topic_alerts_arn]
 
   dimensions = {
     DBInstanceIdentifier = module.db.db_instance_identifier

@@ -11,6 +11,6 @@ variable "region" {
 }
 
 variable "app_id" {
-  description = "Name which identify the deployed app"
+  description = "Name which identifies the deployed app"
   type        = string
 }
