@@ -82,3 +82,14 @@ module "file_uploader" {
   secret_store_name                             = var.secret_store_name
   use_bucket_av                                 = var.use_bucketav
 }
+
+module "image_moderator" {
+  source = "git::https://github.com/lrasata/infra-s3-image-moderator//modules/s3_image_moderator?ref=v1.1.0"
+
+  region                    = var.region
+  environment               = var.environment
+  s3_src_bucket_name        = module.file_uploader.uploads_bucket_id
+  s3_src_bucket_arn         = module.file_uploader.uploads_bucket_arn
+  s3_quarantine_bucket_name = var.quarantine_bucket_name
+  admin_email               = var.notification_email
+}

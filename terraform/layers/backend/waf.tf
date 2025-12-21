@@ -1,5 +1,5 @@
 resource "aws_wafv2_web_acl" "alb_waf" {
-  name        = "${var.environment}-trip-planner-alb-waf"
+  name        = "${var.environment}-${var.app_id}-alb-waf"
   description = "WAF for ALB"
   scope       = "REGIONAL"
   default_action {
@@ -8,13 +8,13 @@ resource "aws_wafv2_web_acl" "alb_waf" {
 
   visibility_config {
     cloudwatch_metrics_enabled = true
-    metric_name                = "${var.environment}-tripPlannerAlbWAF"
+    metric_name                = "${var.environment}-${var.app_id}-AlbWAF"
     sampled_requests_enabled   = true
   }
 
   # Managed rule group (common protections)
   rule {
-    name     = "${var.environment}-AWSManagedRulesCommonRuleSet"
+    name     = "${var.environment}-${var.app_id}-AWSManagedRulesCommonRuleSet"
     priority = 1
 
     override_action {
@@ -30,7 +30,7 @@ resource "aws_wafv2_web_acl" "alb_waf" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "${var.environment}-managedRules"
+      metric_name                = "${var.environment}-${var.app_id}-managedRules"
       sampled_requests_enabled   = true
     }
   }
@@ -39,7 +39,7 @@ resource "aws_wafv2_web_acl" "alb_waf" {
   dynamic "rule" {
     for_each = var.blocked_bots_waf_cloudfront
     content {
-      name     = "${var.environment}-Block${rule.value}"
+      name     = "${var.environment}-${var.app_id}-Block${rule.value}"
       priority = 100 + index(var.blocked_bots_waf_cloudfront, rule.value) # safe offset
 
       statement {
@@ -64,7 +64,7 @@ resource "aws_wafv2_web_acl" "alb_waf" {
 
       visibility_config {
         cloudwatch_metrics_enabled = true
-        metric_name                = "${var.environment}-Block${rule.value}"
+        metric_name                = "${var.environment}-${var.app_id}-Block${rule.value}"
         sampled_requests_enabled   = true
       }
     }
@@ -72,7 +72,7 @@ resource "aws_wafv2_web_acl" "alb_waf" {
 
   # Rate limiting per IP
   rule {
-    name     = "${var.environment}-RateLimitPerIP"
+    name     = "${var.environment}-${var.app_id}-RateLimitPerIP"
     priority = 200
 
     action {
@@ -88,7 +88,7 @@ resource "aws_wafv2_web_acl" "alb_waf" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "${var.environment}-rateLimit"
+      metric_name                = "${var.environment}-${var.app_id}-rateLimit"
       sampled_requests_enabled   = true
     }
   }

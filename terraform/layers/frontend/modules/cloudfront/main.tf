@@ -1,23 +1,31 @@
+locals {
+  static_web_app_origin       = "${var.environment}-${var.app_id}-s3-static-web-files-bucket-origin"
+  uploads_bucket_origin       = "${var.environment}-${var.app_id}-s3-uploads-bucket-origin"
+  alb_origin                  = "${var.environment}-${var.app_id}-alb-origin"
+  locations_api_gw_origin     = "${var.environment}-${var.app_id}-locations-api-gateway-origin"
+  file_uploader_api_gw_origin = "${var.environment}-${var.app_id}-file-uploader-api-gateway-origin"
+}
+
 resource "aws_cloudfront_distribution" "cdn" {
   enabled             = true
   default_root_object = "index.html"
   is_ipv6_enabled     = true
 
   origin {
-    domain_name              = aws_s3_bucket.static_web_app_bucket.bucket_regional_domain_name
+    domain_name              = var.static_web_app_bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id # ensures that CloudFront can access the S3 bucket without making it public
-    origin_id                = "${var.environment}-s3-static-web-files-bucket-origin"
+    origin_id                = local.static_web_app_origin
   }
 
   origin {
-    domain_name              = data.terraform_remote_state.backend_app.outputs.uploads_bucket_regional_domain_name
+    domain_name              = var.uploads_bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
-    origin_id                = "${var.environment}-s3-uploads-bucket-origin"
+    origin_id                = local.uploads_bucket_origin
   }
 
   origin {
-    domain_name = data.terraform_remote_state.backend_app.outputs.alb_lb_dns_name
-    origin_id   = "${var.environment}-alb-origin"
+    domain_name = var.alb_lb_dns_name
+    origin_id   = local.alb_origin
 
     custom_origin_config {
       origin_protocol_policy = "https-only"
@@ -29,7 +37,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
   origin {
     domain_name = var.api_locations_domain_name
-    origin_id   = "${var.environment}-locations-api-gateway-origin"
+    origin_id   = local.locations_api_gw_origin
 
     custom_origin_config {
       origin_protocol_policy = "https-only"
@@ -40,13 +48,13 @@ resource "aws_cloudfront_distribution" "cdn" {
 
     custom_header {
       name  = "x-api-gateway-locations-auth"
-      value = data.terraform_remote_state.security.outputs.locations_auth_secret
+      value = var.locations_auth_secret
     }
   }
 
   origin {
     domain_name = var.api_file_upload_domain_name
-    origin_id   = "${var.environment}-image-uploader-api-gateway-origin"
+    origin_id   = local.file_uploader_api_gw_origin
 
     custom_origin_config {
       origin_protocol_policy = "https-only"
@@ -56,15 +64,15 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
 
     custom_header {
-      name  = "x-api-gateway-img-upload-auth"
-      value = data.terraform_remote_state.security.outputs.img_upload_auth_secret
+      name  = "x-api-gateway-file-upload-auth"
+      value = var.file_upload_auth_secret
     }
   }
   # -------------------------
   # Default behavior for frontend (S3)
   # -------------------------
   default_cache_behavior {
-    target_origin_id = "${var.environment}-s3-static-web-files-bucket-origin"
+    target_origin_id = local.static_web_app_origin
     # Ensure any HTTP request from a user is redirected to HTTPS.
     viewer_protocol_policy = "redirect-to-https"
 
@@ -86,7 +94,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
     lambda_function_association {
       event_type   = "viewer-request"
-      lambda_arn   = aws_lambda_function.spa_fallback.qualified_arn
+      lambda_arn   = var.spa_fallback_qualified_arn
       include_body = false
     }
   }
@@ -96,7 +104,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   # -------------------------
   ordered_cache_behavior {
     path_pattern           = "/api/*"
-    target_origin_id       = "${var.environment}-alb-origin"
+    target_origin_id       = local.alb_origin
     viewer_protocol_policy = "redirect-to-https"
 
     allowed_methods = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
@@ -118,7 +126,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
   ordered_cache_behavior {
     path_pattern           = "/auth/*"
-    target_origin_id       = "${var.environment}-alb-origin"
+    target_origin_id       = local.alb_origin
     viewer_protocol_policy = "redirect-to-https"
 
     allowed_methods = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
@@ -143,7 +151,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   # -------------------------
   ordered_cache_behavior {
     path_pattern           = "/uploads/*"
-    target_origin_id       = "${var.environment}-s3-uploads-bucket-origin"
+    target_origin_id       = local.uploads_bucket_origin
     viewer_protocol_policy = "redirect-to-https"
 
     allowed_methods = ["GET", "HEAD", "OPTIONS"]
@@ -168,7 +176,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   # -------------------------
   ordered_cache_behavior {
     path_pattern           = "/thumbnails/*"
-    target_origin_id       = "${var.environment}-s3-uploads-bucket-origin"
+    target_origin_id       = local.uploads_bucket_origin
     viewer_protocol_policy = "redirect-to-https"
 
     allowed_methods = ["GET", "HEAD", "OPTIONS"]
@@ -193,7 +201,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   # -------------------------
   ordered_cache_behavior {
     path_pattern           = "/locations*"
-    target_origin_id       = "${var.environment}-locations-api-gateway-origin"
+    target_origin_id       = local.locations_api_gw_origin
     allowed_methods        = ["HEAD", "GET", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
     viewer_protocol_policy = "redirect-to-https"
@@ -211,7 +219,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   # -------------------------
   ordered_cache_behavior {
     path_pattern           = "/upload-url*"
-    target_origin_id       = "${var.environment}-image-uploader-api-gateway-origin"
+    target_origin_id       = local.file_uploader_api_gw_origin
     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods         = ["GET", "HEAD"]
     viewer_protocol_policy = "redirect-to-https"
@@ -239,38 +247,15 @@ resource "aws_cloudfront_distribution" "cdn" {
   aliases = [var.cloudfront_domain_name]
 
   # Attach WAF ACL
-  web_acl_id = aws_wafv2_web_acl.trip_planner_cloudfront_waf.arn
+  web_acl_id = var.cloudfront_waf_arn
 
-  depends_on = [
-    aws_cloudfront_origin_access_control.oac,
-    aws_lambda_function.spa_fallback
-  ]
+  depends_on = [aws_cloudfront_origin_access_control.oac]
 }
 
 resource "aws_cloudfront_origin_access_control" "oac" {
-  name                              = "${var.environment}-s3-oac"
+  name                              = "${var.environment}-${var.app_id}-s3-oac"
   description                       = "OAC for private S3 access"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
-}
-
-# -------------------------
-# ROUTE 53 ALIAS RECORD
-# -------------------------
-data "aws_route53_zone" "main" {
-  name         = "epic-trip-planner.com" # this has to be static to allow retrieval of the  Route 53 Hosted Zone
-  private_zone = false
-}
-
-resource "aws_route53_record" "cdn_alias_webapp" {
-  zone_id = data.aws_route53_zone.main.zone_id
-  name    = var.cloudfront_domain_name
-  type    = "A"
-
-  alias {
-    name                   = aws_cloudfront_distribution.cdn.domain_name
-    zone_id                = aws_cloudfront_distribution.cdn.hosted_zone_id
-    evaluate_target_health = false
-  }
 }

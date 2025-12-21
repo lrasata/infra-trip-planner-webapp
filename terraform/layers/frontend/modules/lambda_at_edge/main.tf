@@ -1,9 +1,14 @@
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+}
+
 # Lambda@Edge function for SPA fallback in CloudFront
 # This function serves the SPA fallback page when a user navigates to a non-existent route
 # In this case, it serves the index.html file from the S3 bucket for any route which is different from /api/* or /auth/*
 data "archive_file" "lambda_edge_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/spa_fallback"
+  source_dir  = "${path.module}/src/lambdas/spa_fallback"
   output_path = "${path.module}/spa_fallback.zip"
 }
 
@@ -11,7 +16,7 @@ data "archive_file" "lambda_edge_zip" {
 resource "aws_lambda_function" "spa_fallback" {
   provider      = aws.us_east_1 # Lambda@Edge must be in us-east-1
   filename      = data.archive_file.lambda_edge_zip.output_path
-  function_name = "${var.environment}-spa-fallback"
+  function_name = "${var.environment}-${var.app_id}-spa-fallback"
   role          = aws_iam_role.lambda_edge_role.arn
   handler       = "index.handler"
   runtime       = "nodejs20.x"
@@ -19,7 +24,7 @@ resource "aws_lambda_function" "spa_fallback" {
 }
 
 resource "aws_iam_role" "lambda_edge_role" {
-  name = "${var.environment}-lambda-edge-role"
+  name = "${var.environment}-${var.app_id}-lambda-edge-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

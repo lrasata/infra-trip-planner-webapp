@@ -63,7 +63,7 @@ resource "aws_lb_listener" "http_redirect" {
 }
 
 resource "aws_security_group" "sg_alb" {
-  name        = "${var.environment}-alb-sg"
+  name        = "${var.environment}-${var.app_id}-alb-sg"
   description = "Allow HTTPS"
   vpc_id      = var.vpc_id
 

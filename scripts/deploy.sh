@@ -5,13 +5,13 @@ LAYERS_APPLY=(
   "security"
   "networking"
   "database"
-  "backend-app"
-  "frontend-app"
+  "backend"
+  "frontend"
 )
 
 LAYERS_DESTROY=(
-  "frontend-app"
-  "backend-app"
+  "frontend"
+  "backend"
   "database"
   "networking"
   "security"
@@ -29,7 +29,7 @@ fi
 
 for layer in "${LAYERS[@]}"; do
   echo "🚀 Running terraform $ACTION on $layer ..."
-  cd "terraform/$layer"
+  cd "terraform/layers/$layer"
   terraform init -upgrade
   terraform $ACTION $TF_FLAGS -var-file="$VAR_FILE" -compact-warnings
   cd ../..

@@ -10,6 +10,11 @@ variable "region" {
   default     = "eu-central-1"
 }
 
+variable "app_id" {
+  description = "Name which identifies the deployed app"
+  type        = string
+}
+
 variable "cloudfront_domain_name" {
   description = "The domain name for CloudFront distribution"
   type        = string
@@ -34,7 +39,7 @@ variable "blocked_bots_waf_cloudfront" {
 variable "static_web_app_bucket_name" {
   description = "The name of the S3 bucket for the static web app"
   type        = string
-  default     = "trip-planner-app-bucket"
+  default     = "my-app-bucket"
 }
 
 #--------- Image upload -----------------------------------
@@ -66,13 +71,6 @@ variable "API_COUNTRIES_GEO_DB_URL" {
 variable "GEO_DB_RAPID_API_HOST" {
   description = "The host for the GeoDB Rapid API"
   type        = string
-}
-
-#------------- Image moderator --------------------------------
-variable "quarantine_bucket_name" {
-  description = "S3 quarantine bucket name for flagged content"
-  type        = string
-  default     = "quarantine-bucket"
 }
 
 variable "notification_email" {

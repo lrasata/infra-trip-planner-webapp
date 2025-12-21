@@ -13,8 +13,8 @@ output "locations_auth_secret" {
   sensitive = true
 }
 
-output "img_upload_auth_secret" {
-  value     = local.img_upload_auth_secret
+output "file_upload_auth_secret" {
+  value     = local.file_upload_auth_secret
   sensitive = true
 }
 

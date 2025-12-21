@@ -113,3 +113,9 @@ variable "lambda_memory_size_mb" {
 variable "secret_store_name" {
   type = string
 }
+
+variable "quarantine_bucket_name" {
+  description = "S3 quarantine bucket name for flagged content"
+  type        = string
+  default     = "quarantine-bucket"
+}

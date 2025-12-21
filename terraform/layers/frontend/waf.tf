@@ -1,6 +1,6 @@
-resource "aws_wafv2_web_acl" "trip_planner_cloudfront_waf" {
+resource "aws_wafv2_web_acl" "cloudfront_waf" {
   provider    = aws.us_east_1
-  name        = "${var.environment}-trip-planner-cloudfront-waf"
+  name        = "${var.environment}-${var.app_id}-cloudfront-waf"
   description = "WAF for CloudFront distribution of the Trip Planner app"
   scope       = "CLOUDFRONT"
 
@@ -10,14 +10,14 @@ resource "aws_wafv2_web_acl" "trip_planner_cloudfront_waf" {
 
   visibility_config {
     cloudwatch_metrics_enabled = true
-    metric_name                = "${var.environment}-tripPlannerCloudfrontWAF"
+    metric_name                = "${var.environment}-${var.app_id}-CloudfrontWAF"
     sampled_requests_enabled   = true
   }
 
   # Managed rule group: common protections
   # covers SQL injection, XSS, and other common attacks.
   rule {
-    name     = "${var.environment}-AWSManagedRulesCommonRuleSet"
+    name     = "${var.environment}-${var.app_id}-AWSManagedRulesCommonRuleSet"
     priority = 1
 
     override_action {
@@ -42,7 +42,7 @@ resource "aws_wafv2_web_acl" "trip_planner_cloudfront_waf" {
   dynamic "rule" {
     for_each = var.blocked_bots_waf_cloudfront
     content {
-      name     = "${var.environment}-Block${rule.value}"
+      name     = "${var.environment}-${var.app_id}-Block${rule.value}"
       priority = 10 + index(var.blocked_bots_waf_cloudfront, rule.value) # avoid conflicts with managed rules
 
       statement {
@@ -67,7 +67,7 @@ resource "aws_wafv2_web_acl" "trip_planner_cloudfront_waf" {
 
       visibility_config {
         cloudwatch_metrics_enabled = true
-        metric_name                = "${var.environment}-Block${rule.value}"
+        metric_name                = "${var.environment}-${var.app_id}-Block${rule.value}"
         sampled_requests_enabled   = true
       }
     }
@@ -75,7 +75,7 @@ resource "aws_wafv2_web_acl" "trip_planner_cloudfront_waf" {
 
   # Rate-based rule to limit requests per IP
   rule {
-    name     = "${var.environment}-RateLimitPerIP"
+    name     = "${var.environment}-${var.app_id}-RateLimitPerIP"
     priority = 10 + length(var.blocked_bots_waf_cloudfront) + 1 # after bot rules
 
     action {
@@ -91,7 +91,7 @@ resource "aws_wafv2_web_acl" "trip_planner_cloudfront_waf" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "${var.environment}-rateLimit"
+      metric_name                = "${var.environment}-${var.app_id}-rateLimit"
       sampled_requests_enabled   = true
     }
   }
