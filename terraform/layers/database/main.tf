@@ -13,7 +13,7 @@ module "db" {
   multi_az                = true
   backup_retention_period = var.environment == "prod" ? 7 : 0 # number of days
 
-  db_name  = "${var.environment}-${var.app_id}-db"
+  db_name  = "${var.environment}-${var.app_id}-database-name"
   username = data.terraform_remote_state.security.outputs.datasource_username
   password = data.terraform_remote_state.security.outputs.datasource_password
   port     = 5432
