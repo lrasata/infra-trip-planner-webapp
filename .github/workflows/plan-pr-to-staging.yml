@@ -200,7 +200,7 @@ jobs:
             const path = require('path');
             const plansDir = 'plans';
             let combinedBody = '### Terraform Plan (staging - All Layers)\n\n';
-            const layers = ['security', 'networking', 'database'];  # Updated to match active layers
+            const layers = ['security', 'networking', 'database'];
             for (const layer of layers) {
               const planPath = path.join(plansDir, `terraform-plan-staging-${layer}`, 'tfplan.txt');
               if (fs.existsSync(planPath)) {
