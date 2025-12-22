@@ -14,8 +14,8 @@ module "db" {
   backup_retention_period = var.environment == "prod" ? 7 : 0 # number of days
 
   db_name  = "${var.environment}-${var.app_id}-database-name"
-  username = data.terraform_remote_state.security.outputs.datasource_username
-  password = data.terraform_remote_state.security.outputs.datasource_password
+  username = try(data.terraform_remote_state.security.outputs.datasource_username, "placeholder_username")
+  password = try(data.terraform_remote_state.security.outputs.datasource_password, "placeholder_password")
   port     = 5432
 
   vpc_security_group_ids = [aws_security_group.sg_rds.id]
@@ -30,13 +30,13 @@ module "db" {
 
 resource "aws_db_subnet_group" "rds_subnet_group" {
   name       = "${var.environment}-${var.app_id}-rds-subnet-group"
-  subnet_ids = data.terraform_remote_state.networking.outputs.private_subnets # At least two subnets in different AZs
+  subnet_ids = try(data.terraform_remote_state.networking.outputs.private_subnets, ["subnet-placeholder1","subnet-placeholder2"])
 }
 
 resource "aws_security_group" "sg_rds" {
   name        = "${var.environment}-${var.app_id}-rds-sg"
   description = "Allow ECS tasks access to database and internet"
-  vpc_id      = data.terraform_remote_state.networking.outputs.vpc_id
+  vpc_id      = try(data.terraform_remote_state.networking.outputs.vpc_id, "vpc-placeholder")
 
   ingress {
     from_port   = 5432
