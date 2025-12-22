@@ -3,7 +3,7 @@ module "db" {
   identifier = "${var.environment}-${var.app_id}-db"
 
   # Restore from snapshot if provided, else create new DB
-  snapshot_identifier = var.restore_db_snapshot_id != "" ? var.restore_db_snapshot_id : undefined
+  snapshot_identifier = var.restore_db_snapshot_id != "" ? var.restore_db_snapshot_id : null
 
   engine                  = "postgres"
   engine_version          = "15"
