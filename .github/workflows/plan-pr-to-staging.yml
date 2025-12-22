@@ -8,22 +8,71 @@ on:
       layers:
         description: 'Comma-separated list of layers (e.g., security,networking). Leave empty for all.'
         required: false
-        default: 'security,networking' # ,'database','backend','frontend'
+        default: 'security,networking,database' #'backend','frontend'
 
 jobs:
-  terraform-plan:
-    name: Terraform Plan
+  plan-security:
+    name: Terraform Plan (security)
     runs-on: ubuntu-latest
     environment: staging
-    strategy:
-      matrix:
-        layer: ${{ fromJSON(github.event.inputs.layers || '["security","networking"]') }} # ,"database","backend","frontend"
-
     permissions:
       id-token: write   # OIDC
       contents: read
       pull-requests: write
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_environment: staging
+      TF_VAR_app_id: trip-planner-app
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Validate
+        working-directory: terraform/layers/security
+        run: |
+          terraform init -input=false -upgrade
+          terraform validate
+
+      - name: Run TFSec Security Check
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          working_directory: terraform/layers/security
+          soft_fail: 'true'
+          format: sarif
+          additional_args: --minimum-severity MEDIUM
+
+      - name: Terraform Plan (staging)
+        working-directory: terraform/layers/security
+        run: |
+          terraform plan -out=tfplan -input=false
+          terraform show -no-color tfplan > tfplan.txt
+
+      - name: Upload plan as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-staging-security
+          path: terraform/layers/security/tfplan.txt
+
+  plan-networking:
+    name: Terraform Plan (networking)
+    runs-on: ubuntu-latest
+    environment: staging
+    needs: plan-security
+    permissions:
+      id-token: write   # OIDC
+      contents: read
+      pull-requests: write
     env:
       TF_VAR_region: ${{ secrets.AWS_REGION }}
       TF_VAR_environment: staging
@@ -32,29 +81,6 @@ jobs:
       TF_VAR_public_subnets_ips: ${{ secrets.PUBLIC_SUBNETS_IPS }}
       TF_VAR_private_subnets_ips: ${{ secrets.PRIVATE_SUBNETS_IPS }}
       TF_VAR_app_id: trip-planner-app
-      TF_VAR_api_locations_domain_name: staging-api-locations.epic-trip-planner.com
-      TF_VAR_alb_domain_name: staging-alb.epic-trip-planner.com
-      TF_VAR_cloudfront_domain_name: staging.epic-trip-planner.com
-      TF_VAR_route53_zone_name: epic-trip-planner.com 
-      TF_VAR_container_image: lrasata/trip-planner-backend-app:1.1.0
-      TF_VAR_super_admin_fullname: SuperAdmin      
-      TF_VAR_allowed_origins: https://staging.epic-trip-planner.com # TODO double check this should be a list
-      TF_VAR_cloudfront_certificate_arn: ${{secrets.CLOUDFRONT_CERTIFICATE_ARN}}
-      TF_VAR_hosted_zone_id: ${{secrets.HOSTED_ZONE_ID}}
-      TF_VAR_API_CITIES_GEO_DB_URL: ${{secrets.API_CITIES_GEO_DB_URL}}
-      TF_VAR_GEO_DB_RAPID_API_HOST: ${{secrets.GEO_DB_RAPID_API_HOST}}
-      TF_VAR_API_COUNTRIES_GEO_DB_URL: ${{secrets.API_COUNTRIES_GEO_DB_URL}}
-      TF_VAR_static_web_app_bucket_name: trip-planner-static-webapp-bucket
-      TF_VAR_quarantine_bucket_name: quarantine-flagged-content-bukcet
-      TF_VAR_api_file_upload_domain_name: staging-api-file-upload.epic-trip-planner.com
-      TF_VAR_backend_certificate_arn: ${{secrets.BACKEND_CERTIFICATE_ARN}}
-      TF_VAR_uploads_bucket_name: file-uploads-bucket
-      TF_VAR_enable_transfer_acceleration: true
-      TF_VAR_use_bucketav: false
-      TF_VAR_bucketav_sns_findings_topic_name: ""
-      TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
-      TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -71,7 +97,7 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Terraform Validate
-        working-directory: terraform/layers/${{ matrix.layer }}
+        working-directory: terraform/layers/networking
         run: |
           terraform init -input=false -upgrade
           terraform validate
@@ -79,13 +105,13 @@ jobs:
       - name: Run TFSec Security Check
         uses: aquasecurity/tfsec-action@v1.0.0
         with:
-          working_directory: terraform/layers/${{ matrix.layer }}
+          working_directory: terraform/layers/networking
           soft_fail: 'true'
           format: sarif
           additional_args: --minimum-severity MEDIUM
 
       - name: Terraform Plan (staging)
-        working-directory: terraform/layers/${{ matrix.layer }}
+        working-directory: terraform/layers/networking
         run: |
           terraform plan -out=tfplan -input=false
           terraform show -no-color tfplan > tfplan.txt
@@ -93,13 +119,68 @@ jobs:
       - name: Upload plan as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: terraform-plan-staging-${{ matrix.layer }}
-          path: terraform/layers/${{ matrix.layer }}/tfplan.txt
+          name: terraform-plan-staging-networking
+          path: terraform/layers/networking/tfplan.txt
+
+  plan-database:
+    name: Terraform Plan (database)
+    runs-on: ubuntu-latest
+    environment: staging
+    needs: plan-networking
+    permissions:
+      id-token: write   # OIDC
+      contents: read
+      pull-requests: write
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_environment: staging
+      TF_VAR_app_id: trip-planner-app
+      TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager # Updtate this
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Validate
+        working-directory: terraform/layers/database
+        run: |
+          terraform init -input=false -upgrade
+          terraform validate
+
+      - name: Run TFSec Security Check
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          working_directory: terraform/layers/database
+          soft_fail: 'true'
+          format: sarif
+          additional_args: --minimum-severity MEDIUM
+
+      - name: Terraform Plan (staging)
+        working-directory: terraform/layers/database
+        run: |
+          terraform plan -out=tfplan -input=false
+          terraform show -no-color tfplan > tfplan.txt
+
+      - name: Upload plan as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-staging-database
+          path: terraform/layers/database/tfplan.txt
 
   combine-and-comment:
     name: Combine Plans and Comment
     runs-on: ubuntu-latest
-    needs: terraform-plan  # Wait for all matrix jobs
+    needs: [plan-security, plan-networking, plan-database]  # Wait for all sequential jobs
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
@@ -119,7 +200,7 @@ jobs:
             const path = require('path');
             const plansDir = 'plans';
             let combinedBody = '### Terraform Plan (staging - All Layers)\n\n';
-            const layers = ['security', 'networking', 'database', 'backend', 'frontend'];
+            const layers = ['security', 'networking', 'database'];  # Updated to match active layers
             for (const layer of layers) {
               const planPath = path.join(plansDir, `terraform-plan-staging-${layer}`, 'tfplan.txt');
               if (fs.existsSync(planPath)) {
@@ -135,4 +216,3 @@ jobs:
               issue_number: context.issue.number,
               body: combinedBody
             });
-      

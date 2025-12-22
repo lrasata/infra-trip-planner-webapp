@@ -4,11 +4,6 @@ variable "environment" {
   default     = "prod"
 }
 
-variable "database_name" {
-  description = "database name"
-  type        = string
-}
-
 variable "region" {
   description = "The AWS region to deploy resources"
   type        = string
