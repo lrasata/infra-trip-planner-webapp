@@ -2,6 +2,7 @@
 
 ![Staging Plan](https://github.com/lrasata/infra-trip-planner-webapp/actions/workflows/plan-pr-to-staging.yml/badge.svg)
 
+![Ephemeral Apply](https://github.com/lrasata/infra-trip-planner-webapp/actions/workflows/apply-to-ephemeral-env.yml/badge.svg)
 
 # Table of Contents
 - [Backend Infrastructure (TripPlannerAPI)](#backend-infrastructure-tripplannerapi)
