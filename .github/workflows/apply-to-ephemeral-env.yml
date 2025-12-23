@@ -12,7 +12,7 @@ on:
 jobs:
   apply-security:
     if: ${{ github.event.review.state == 'approved' }}
-    name: Apply to Ephemeral Environment (security)
+    name: Apply to Eph Env (security)
     runs-on: ubuntu-latest
     environment: ephemeral
     permissions:
@@ -52,7 +52,7 @@ jobs:
 
   apply-networking:
     if: ${{ github.event.review.state == 'approved' }}
-    name: Apply to Ephemeral Environment (networking)
+    name: Apply to Eph Env (networking)
     runs-on: ubuntu-latest
     environment: ephemeral
     needs: apply-security
@@ -62,7 +62,7 @@ jobs:
       pull-requests: write
     env:
       TF_VAR_region: ${{ secrets.AWS_REGION }}
-      TF_VAR_environment: staging
+      TF_VAR_environment: ephemeral
       TF_VAR_azs: '["${{ secrets.AWS_REGION }}a", "${{ secrets.AWS_REGION }}b", "${{ secrets.AWS_REGION }}c"]'
       TF_VAR_vpc_cidr_block: ${{ secrets.VPC_CIDR }}
       TF_VAR_public_subnets_ips: ${{ secrets.PUBLIC_SUBNETS_IPS }}
@@ -114,7 +114,7 @@ jobs:
             ### ✅ Ephemeral Environment Deployed Successfully
             
             **Environment:** ephemeral-pr-${prNumber}
-            **Domain:** eph-pr${prNumber}-api-file-upload.epic-trip-planner.com
+            **Domain:** eph-pr${prNumber}.epic-trip-planner.com
             
             The changes have been successfully deployed to an ephemeral environment for testing.
             
