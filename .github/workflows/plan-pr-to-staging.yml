@@ -187,7 +187,7 @@ jobs:
       TF_VAR_alb_domain_name: staging-alb.epic-trip-planner.com
       TF_VAR_route53_zone_name: epic-trip-planner.com
       TF_VAR_container_image: lrasata/trip-planner-backend-app:1.1.0
-      TF_VAR_allowed_origins: https://staging.epic-trip-planner.com # TODO double check this should be a list
+      TF_VAR_allowed_origins: https://staging.epic-trip-planner.com
       TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
       TF_VAR_api_file_upload_domain_name: staging-api-file-upload.epic-trip-planner.com
       TF_VAR_backend_certificate_arn: ${{secrets.BACKEND_CERTIFICATE_ARN}}
@@ -208,7 +208,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager # Updtate this
+          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Terraform Validate
@@ -272,7 +272,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager # Updtate this
+          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Terraform Validate

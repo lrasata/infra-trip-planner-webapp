@@ -1,0 +1,108 @@
+name: Apply to Ephemeral Environment
+
+on:
+  pull_request_review:
+    types: [submitted]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR Number'
+        required: true
+
+jobs:
+  apply-security:
+    if: ${{ github.event.review.state == 'approved' }}
+    name: Apply to Ephemeral Environment (security)
+    runs-on: ubuntu-latest
+    environment: ephemeral
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_app_id: trip-planner-app-eph-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+      TF_VAR_environment: ephemeral-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/gitHubFileUploader
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/layers/security
+        run: |
+          terraform init -input=false
+
+      - name: Terraform Apply
+        working-directory: terraform/layers/security
+        run: |
+          terraform apply -auto-approve
+
+
+  comment-deployment:
+    name: Comment Deployment Result
+    runs-on: ubuntu-latest
+    needs: [apply-security]  # Add all apply jobs
+    if: always()
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Comment deployment success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request?.number || "${{ github.event.inputs.pr_number }}";
+            const commentBody = `
+            ### ✅ Ephemeral Environment Deployed Successfully
+            
+            **Environment:** ephemeral-pr-${prNumber}
+            **Domain:** eph-pr${prNumber}-api-file-upload.epic-trip-planner.com
+            
+            The changes have been successfully deployed to an ephemeral environment for testing.
+            
+            ⚠️ **Note:** This environment will be automatically destroyed when the PR is merged or closed.
+            `;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: commentBody
+            });
+
+      - name: Comment deployment failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request?.number || "${{ github.event.inputs.pr_number }}";
+            const commentBody = `
+            ### ❌ Ephemeral Environment Deployment Failed
+            
+            The deployment to ephemeral environment failed. Please check the workflow logs for details.
+            
+            This indicates that the terraform apply would likely fail in the actual environment.
+            `;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: commentBody
+            });
