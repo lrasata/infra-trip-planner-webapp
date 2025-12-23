@@ -66,7 +66,7 @@ module "ecs_service" {
 
 # File uploader
 module "file_uploader" {
-  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=v1.6.0"
+  source = "git::https://github.com/lrasata/infra-file-uploader//terraform/modules/file_uploader?ref=v1.6.1"
 
   region                                        = var.region
   environment                                   = var.environment
