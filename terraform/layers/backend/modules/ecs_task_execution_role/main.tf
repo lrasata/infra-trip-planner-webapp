@@ -40,19 +40,22 @@ resource "aws_iam_policy" "secrets_access" {
 }
 
 locals {
-  ecs_execution_role_policies = [
-    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
-    "arn:aws:iam::aws:policy/AmazonS3FullAccess",
-    "arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess",
-    "arn:aws:iam::aws:policy/SecretsManagerReadWrite",
-    aws_iam_policy.secrets_access.arn
-  ]
+  ecs_execution_role_policies_map = {
+    ecs_execution = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+    s3_full       = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+    dynamo_read   = "arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess"
+    secrets       = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+  }
 }
 
-
 resource "aws_iam_role_policy_attachment" "ecs_execution_role" {
-  for_each = toset(local.ecs_execution_role_policies)
-
+  for_each   = local.ecs_execution_role_policies_map
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = each.value
+}
+
+# Attach dynamic separately
+resource "aws_iam_role_policy_attachment" "ecs_execution_role_dynamic" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.secrets_access.arn
 }

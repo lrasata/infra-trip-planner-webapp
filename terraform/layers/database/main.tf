@@ -30,7 +30,7 @@ module "db" {
 
 resource "aws_db_subnet_group" "rds_subnet_group" {
   name       = "${var.environment}-${var.app_id}-rds-subnet-group"
-  subnet_ids = try(data.terraform_remote_state.networking.outputs.private_subnets, ["subnet-placeholder1","subnet-placeholder2"])
+  subnet_ids = try(data.terraform_remote_state.networking.outputs.private_subnets, ["subnet-placeholder1", "subnet-placeholder2"])
 }
 
 resource "aws_security_group" "sg_rds" {

@@ -1,4 +1,7 @@
-# Trip Planner Infrastructure - managed with Terraform on AWS
+# Trip Planner Infra - managed with Terraform on AWS
+
+![Staging Plan](https://github.com/lrasata/infra-trip-planner-webapp/actions/workflows/plan-pr-to-staging.yml/badge.svg)
+
 
 # Table of Contents
 - [Backend Infrastructure (TripPlannerAPI)](#backend-infrastructure-tripplannerapi)
