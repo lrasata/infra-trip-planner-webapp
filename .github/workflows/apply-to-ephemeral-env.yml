@@ -21,8 +21,8 @@ jobs:
       pull-requests: write
     env:
       TF_VAR_region: ${{ secrets.AWS_REGION }}
-      TF_VAR_app_id: trip-planner-app-eph-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
-      TF_VAR_environment: ephemeral-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+      TF_VAR_app_id: trip-planner-app
+      TF_VAR_environment: ephemeral
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
