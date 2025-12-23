@@ -56,6 +56,7 @@ variable "cookie_same_site" {
 variable "super_admin_fullname" {
   description = "Fullname of bootstrapped SuperAdmin user when app starts"
   type        = string
+  default = "admin"
 }
 
 variable "notification_email" {

@@ -3,12 +3,6 @@ name: Plan PR updates on Staging env
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  workflow_dispatch:
-    inputs:
-      layers:
-        description: 'Comma-separated list of layers (e.g., security,networking). Leave empty for all.'
-        required: false
-        default: 'security,networking,database' #'backend','frontend'
 
 jobs:
   plan-security:
@@ -93,7 +87,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager # Updtate this
+          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Terraform Validate
@@ -176,11 +170,77 @@ jobs:
         with:
           name: terraform-plan-staging-database
           path: terraform/layers/database/tfplan.txt
+  
+  plan-backend:
+    name: Terraform Plan (backend)
+    runs-on: ubuntu-latest
+    environment: staging
+    needs: plan-database
+    permissions:
+      id-token: write   # OIDC
+      contents: read
+      pull-requests: write
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_environment: staging
+      TF_VAR_app_id: trip-planner-app
+      TF_VAR_alb_domain_name: staging-alb.epic-trip-planner.com
+      TF_VAR_route53_zone_name: epic-trip-planner.com
+      TF_VAR_container_image: lrasata/trip-planner-backend-app:1.1.0
+      TF_VAR_allowed_origins: https://staging.epic-trip-planner.com # TODO double check this should be a list
+      TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
+      TF_VAR_api_file_upload_domain_name: staging-api-file-upload.epic-trip-planner.com
+      TF_VAR_backend_certificate_arn: ${{secrets.BACKEND_CERTIFICATE_ARN}}
+      TF_VAR_use_bucketav: false
+      TF_VAR_bucketav_sns_findings_topic_name: ""
+      TF_VAR_uploads_bucket_name: file-uploads-bucket
+      TF_VAR_enable_transfer_acceleration: true
+      TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.12.2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager # Updtate this
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Validate
+        working-directory: terraform/layers/backend
+        run: |
+          terraform init -input=false -upgrade
+          terraform validate
+
+      - name: Run TFSec Security Check
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          working_directory: terraform/layers/backend
+          soft_fail: 'true'
+          format: sarif
+          additional_args: --minimum-severity MEDIUM
+
+      - name: Terraform Plan (staging)
+        working-directory: terraform/layers/backend
+        run: |
+          terraform plan -out=tfplan -input=false
+          terraform show -no-color tfplan > tfplan.txt
+
+      - name: Upload plan as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-staging-backend
+          path: terraform/layers/backend/tfplan.txt
 
   combine-and-comment:
     name: Combine Plans and Comment
     runs-on: ubuntu-latest
-    needs: [plan-security, plan-networking, plan-database]  # Wait for all sequential jobs
+    needs: [plan-security, plan-networking, plan-database, plan-backend]  # Wait for all sequential jobs
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
@@ -200,7 +260,7 @@ jobs:
             const path = require('path');
             const plansDir = 'plans';
             let combinedBody = '### Terraform Plan (staging - All Layers)\n\n';
-            const layers = ['security', 'networking', 'database'];
+            const layers = ['security', 'networking', 'database', 'backend'];
             for (const layer of layers) {
               const planPath = path.join(plansDir, `terraform-plan-staging-${layer}`, 'tfplan.txt');
               if (fs.existsSync(planPath)) {

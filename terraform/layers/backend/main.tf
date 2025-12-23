@@ -22,13 +22,13 @@ module "ecs_task_definition" {
   allowed_origins         = var.allowed_origins
   app_id                  = var.app_id
   container_image         = var.container_image
-  db_instance_address     = data.terraform_remote_state.database.outputs.db_instance_address
-  db_name                 = data.terraform_remote_state.database.outputs.db_name
+  db_instance_address     = try(data.terraform_remote_state.database.outputs.db_instance_address, "db-instance-address-placeholder") 
+  db_name                 = try(data.terraform_remote_state.database.outputs.db_name, "db-name-placeholder")
   dynamo_db_table_name    = module.file_uploader.dynamo_db_table_name
   environment             = var.environment
   region                  = var.region
   s3_bucket_id            = module.file_uploader.uploads_bucket_id
-  secrets_arn             = data.terraform_remote_state.security.outputs.secrets_arn
+  secrets_arn             = try(data.terraform_remote_state.database.outputs.secrets_arn, "secrets-arn-placeholder") 
   super_admin_fullname    = var.super_admin_fullname
   task_execution_role_arn = module.ecs_task_execution_role.task_exec_role_arn
   cookie_same_site        = var.cookie_same_site
@@ -44,8 +44,8 @@ module "alb" {
   backend_certificate_arn = var.backend_certificate_arn
   environment             = var.environment
   hosted_zone_id          = var.route53_zone_name
-  public_subnets          = data.terraform_remote_state.networking.outputs.public_subnets
-  vpc_id                  = data.terraform_remote_state.networking.outputs.vpc_id
+  public_subnets          = try(data.terraform_remote_state.networking.outputs.public_subnets, ["public-subnet-placeholder1","public-subnet-placeholder2"])
+  vpc_id                  = try(data.terraform_remote_state.networking.outputs.vpc_id, "vpc-id-placeholder")
 }
 
 # ECS Service
@@ -57,11 +57,11 @@ module "ecs_service" {
   cluster_id            = module.ecs_cluster.cluster_id
   cluster_name          = module.ecs_cluster.cluster_name
   environment           = var.environment
-  private_subnets       = data.terraform_remote_state.networking.outputs.private_subnets
+  private_subnets       = try(data.terraform_remote_state.networking.outputs.private_subnets, ["private-subnet-placeholder1","private-subnet-placeholder2"])
   sg_alb_id             = module.alb.sg_alb_id
-  sg_rds_id             = data.terraform_remote_state.database.outputs.rds_sg.id
+  sg_rds_id             = try(data.terraform_remote_state.database.outputs.rds_sg.id, "sg-rds-id-placeholder")
   task_definition_arn   = module.ecs_task_definition.task_definition_arn
-  vpc_id                = data.terraform_remote_state.networking.outputs.vpc_id
+  vpc_id                = try(data.terraform_remote_state.networking.outputs.vpc_id, "vpc-id-placeholder")
 }
 
 # File uploader
