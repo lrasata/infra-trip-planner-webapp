@@ -70,5 +70,5 @@ module "locations_api" {
   API_COUNTRIES_GEO_DB_URL  = var.API_COUNTRIES_GEO_DB_URL
   GEO_DB_RAPID_API_HOST     = var.GEO_DB_RAPID_API_HOST
   route_53_zone_id          = module.route53.route53_zone_id
-  sns_topic_alerts_arn      = try(data.terraform_remote_state.backend_app.outputs.sns_topic_arn, "sns-topic-arn-placeholder")
+  sns_topic_alerts_arn      = module.frontend_sns_alerts.sns_topic_alerts_arn
 }
