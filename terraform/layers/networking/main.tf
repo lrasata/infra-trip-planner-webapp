@@ -13,7 +13,7 @@ module "vpc" {
   public_subnets  = var.public_subnets_ips
 
   enable_nat_gateway = true  # allow ECS tasks to pull images from ECR/Docker Hub and install updates
-  single_nat_gateway = false # NATGW are AZ resilient, to have Region resilience, we want 1 NATGW per AZ. (route table is handled by the module)
+  single_nat_gateway = var.environment == "ephemeral" ? true : false # NATGW are AZ resilient, to have Region resilience, we want 1 NATGW per AZ. (route table is handled by the module)
 }
 
 # Use gateway endpoint to allow private access to DynamoDB
