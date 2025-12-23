@@ -236,11 +236,75 @@ jobs:
         with:
           name: terraform-plan-staging-backend
           path: terraform/layers/backend/tfplan.txt
+  
+  plan-frontend:
+    name: Terraform Plan (frontend)
+    runs-on: ubuntu-latest
+    environment: staging
+    needs: plan-security
+    permissions:
+      id-token: write   # OIDC
+      contents: read
+      pull-requests: write
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_environment: staging
+      TF_VAR_app_id: trip-planner-app
+      TF_VAR_cloudfront_domain_name: staging.epic-trip-planner.com
+      TF_VAR_cloudfront_certificate_arn: ${{secrets.CLOUDFRONT_CERTIFICATE_ARN}}
+      TF_VAR_backend_certificate_arn: ${{secrets.BACKEND_CERTIFICATE_ARN}}
+      TF_VAR_static_web_app_bucket_name: trip-planner-static-webapp-bucket
+      TF_VAR_api_file_upload_domain_name: staging-api-file-upload.epic-trip-planner.com
+      TF_VAR_api_locations_domain_name: staging-api-locations.epic-trip-planner.com
+      TF_VAR_API_CITIES_GEO_DB_URL: ${{secrets.API_CITIES_GEO_DB_URL}}
+      TF_VAR_GEO_DB_RAPID_API_HOST: ${{secrets.GEO_DB_RAPID_API_HOST}}
+      TF_VAR_API_COUNTRIES_GEO_DB_URL: ${{secrets.API_COUNTRIES_GEO_DB_URL}}
+      TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.12.2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager # Updtate this
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Validate
+        working-directory: terraform/layers/frontend
+        run: |
+          terraform init -input=false -upgrade
+          terraform validate
+
+      - name: Run TFSec Security Check
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          working_directory: terraform/layers/frontend
+          soft_fail: 'true'
+          format: sarif
+          additional_args: --minimum-severity MEDIUM
+
+      - name: Terraform Plan (staging)
+        working-directory: terraform/layers/frontend
+        run: |
+          terraform plan -out=tfplan -input=false
+          terraform show -no-color tfplan > tfplan.txt
+
+      - name: Upload plan as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-staging-frontend
+          path: terraform/layers/frontend/tfplan.txt
 
   combine-and-comment:
     name: Combine Plans and Comment
     runs-on: ubuntu-latest
-    needs: [plan-security, plan-networking, plan-database, plan-backend]  # Wait for all sequential jobs
+    needs: [plan-security, plan-networking, plan-database, plan-backend, plan-frontend]  # Wait for all sequential jobs
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
