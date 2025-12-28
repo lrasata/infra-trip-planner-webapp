@@ -35,7 +35,13 @@ jobs:
       - name: Terraform Validate
         working-directory: terraform/layers/security
         run: |
-          terraform init -input=false -upgrade
+          terraform init \
+            -input=false -upgrade \
+            -backend-config="bucket=trip-planner-states" \
+            -backend-config="key=security/staging/terraform.tfstate" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="dynamodb_table=terraform-locks" \
+            -backend-config="encrypt=true"
           terraform validate
 
       - name: Run TFSec Security Check
@@ -93,7 +99,13 @@ jobs:
       - name: Terraform Validate
         working-directory: terraform/layers/networking
         run: |
-          terraform init -input=false -upgrade
+          terraform init \
+            -input=false -upgrade \
+            -backend-config="bucket=trip-planner-states" \
+            -backend-config="key=networking/staging/terraform.tfstate" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="dynamodb_table=terraform-locks" \
+            -backend-config="encrypt=true"
           terraform validate
 
       - name: Run TFSec Security Check
@@ -148,7 +160,13 @@ jobs:
       - name: Terraform Validate
         working-directory: terraform/layers/database
         run: |
-          terraform init -input=false -upgrade
+          terraform init \
+            -input=false -upgrade \
+            -backend-config="bucket=trip-planner-states" \
+            -backend-config="key=database/staging/terraform.tfstate" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="dynamodb_table=terraform-locks" \
+            -backend-config="encrypt=true"
           terraform validate
 
       - name: Run TFSec Security Check
@@ -214,7 +232,13 @@ jobs:
       - name: Terraform Validate
         working-directory: terraform/layers/backend
         run: |
-          terraform init -input=false -upgrade
+          terraform init \
+            -input=false -upgrade \
+            -backend-config="bucket=trip-planner-states" \
+            -backend-config="key=backend/staging/terraform.tfstate" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="dynamodb_table=terraform-locks" \
+            -backend-config="encrypt=true"
           terraform validate
 
       - name: Run TFSec Security Check
@@ -278,7 +302,13 @@ jobs:
       - name: Terraform Validate
         working-directory: terraform/layers/frontend
         run: |
-          terraform init -input=false -upgrade
+          terraform init \
+            -input=false -upgrade \
+            -backend-config="bucket=trip-planner-states" \
+            -backend-config="key=frontend/staging/terraform.tfstate" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="dynamodb_table=terraform-locks" \
+            -backend-config="encrypt=true"
           terraform validate
 
       - name: Run TFSec Security Check

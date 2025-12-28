@@ -43,7 +43,13 @@ jobs:
       - name: Terraform Init
         working-directory: terraform/layers/security
         run: |
-          terraform init -input=false
+          terraform init \
+            -input=false \
+            -backend-config="bucket=trip-planner-states" \
+            -backend-config="key=networking/ephemeral/terraform.tfstate" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="dynamodb_table=terraform-locks" \
+            -backend-config="encrypt=true"
 
       - name: Terraform Apply
         working-directory: terraform/layers/security
@@ -88,7 +94,13 @@ jobs:
       - name: Terraform Init
         working-directory: terraform/layers/networking
         run: |
-          terraform init -input=false
+          terraform init \
+            -input=false \
+            -backend-config="bucket=trip-planner-states" \
+            -backend-config="key=/ephemeral/terraform.tfstate" \
+            -backend-config="region=eu-cennetworkingtral-1" \
+            -backend-config="dynamodb_table=terraform-locks" \
+            -backend-config="encrypt=true"
 
       - name: Terraform Apply
         working-directory: terraform/layers/networking
@@ -130,7 +142,13 @@ jobs:
       - name: Terraform Init
         working-directory: terraform/layers/database
         run: |
-          terraform init -input=false
+          terraform init \
+            -input=false -upgrade \
+            -backend-config="bucket=trip-planner-states" \
+            -backend-config="key=database/ephemeral/terraform.tfstate" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="dynamodb_table=terraform-locks" \
+            -backend-config="encrypt=true"
 
       - name: Terraform Apply
         working-directory: terraform/layers/database

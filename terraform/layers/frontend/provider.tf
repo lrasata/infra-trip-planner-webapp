@@ -1,9 +1,5 @@
 terraform {
-  backend "s3" {
-    bucket = "trip-planner-states"
-    key    = "frontend-app/terraform.tfstate"
-    region = "eu-central-1"
-  }
+    backend "s3" {}
 
   required_providers {
     aws = {
