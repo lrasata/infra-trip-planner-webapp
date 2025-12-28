@@ -1,6 +1,3 @@
-resource "random_id" "ephemeral" {
-  byte_length = 2
-}
 # This module creates a VPC with public and private subnets across 3 AZs in the eu-central-1 region (Frankfurt).
 # It creates automatically an Internet Gateway (IGW) and attach it to the VPC. Create a route table for the public subnets with a 0.0.0.0/0 → igw-xxxx route.
 # And associate that route table with your 3 public subnets. 
@@ -8,7 +5,7 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.1.0"
 
-  name = var.environment == "ephemeral" ? "${var.environment}-${var.app_id}-vpc-${random_id.ephemeral.hex}" : "${var.environment}-${var.app_id}-vpc"
+  name = "${var.environment}-${var.app_id}-vpc"
   cidr = var.vpc_cidr
 
   azs             = var.azs
