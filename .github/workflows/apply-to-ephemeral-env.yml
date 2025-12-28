@@ -46,7 +46,7 @@ jobs:
           terraform init \
             -input=false \
             -backend-config="bucket=trip-planner-states" \
-            -backend-config="key=networking/ephemeral/terraform.tfstate" \
+            -backend-config="key=security/ephemeral/terraform.tfstate" \
             -backend-config="region=eu-central-1" \
             -backend-config="dynamodb_table=ephemeral-trip-planner-terraform-locks" \
             -backend-config="encrypt=true"
@@ -97,7 +97,7 @@ jobs:
           terraform init \
             -input=false \
             -backend-config="bucket=trip-planner-states" \
-            -backend-config="key=/ephemeral/terraform.tfstate" \
+            -backend-config="key=networking/ephemeral/terraform.tfstate" \
             -backend-config="region=eu-cennetworkingtral-1" \
             -backend-config="dynamodb_table=ephemeral-trip-planner-terraform-locks" \
             -backend-config="encrypt=true"
