@@ -24,8 +24,8 @@ module "db" {
   family = "postgres15"
 
   publicly_accessible = false
-  skip_final_snapshot = false # take snapshot before destroy, only restorable if the networking layer did not change
-  deletion_protection = var.environment == "ephemeral" ? false : true  # prevent accidental deletion
+  skip_final_snapshot = false                                         # take snapshot before destroy, only restorable if the networking layer did not change
+  deletion_protection = var.environment == "ephemeral" ? false : true # prevent accidental deletion
 }
 
 resource "aws_db_subnet_group" "rds_subnet_group" {

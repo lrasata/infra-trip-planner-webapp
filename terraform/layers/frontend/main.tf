@@ -15,18 +15,18 @@ module "spa_fallback" {
 module "cloudfront" {
   source = "./modules/cloudfront"
 
-  alb_lb_dns_name                            = try(data.terraform_remote_state.backend_app.outputs.alb_lb_dns_name, "alb-lb-dns-name-placeholder")
+  alb_lb_dns_name                            = try(data.terraform_remote_state.backend.outputs.alb_lb_dns_name, "alb-lb-dns-name-placeholder")
   api_file_upload_domain_name                = var.api_file_upload_domain_name
   api_locations_domain_name                  = var.api_locations_domain_name
   app_id                                     = var.app_id
   cloudfront_certificate_arn                 = var.cloudfront_certificate_arn
   cloudfront_waf_arn                         = aws_wafv2_web_acl.cloudfront_waf.arn
   environment                                = var.environment
-  file_upload_auth_secret                    = try(data.terraform_remote_state.backend_app.outputs.file_upload_auth_secret, "file-upload-auth-secret-placeholder")
-  locations_auth_secret                      = try(data.terraform_remote_state.backend_app.outputs.locations_auth_secret, "locations-auth-secret-placeholder")
+  file_upload_auth_secret                    = try(data.terraform_remote_state.backend.outputs.file_upload_auth_secret, "file-upload-auth-secret-placeholder")
+  locations_auth_secret                      = try(data.terraform_remote_state.backend.outputs.locations_auth_secret, "locations-auth-secret-placeholder")
   spa_fallback_qualified_arn                 = module.spa_fallback.lambda_at_edge_arn
   static_web_app_bucket_regional_domain_name = module.s3.bucket_regional_domain_name
-  uploads_bucket_regional_domain_name        = try(data.terraform_remote_state.backend_app.outputs.uploads_bucket_regional_domain_name, "uploads-regional-domain-name-placeholder")
+  uploads_bucket_regional_domain_name        = try(data.terraform_remote_state.backend.outputs.uploads_bucket_regional_domain_name, "uploads-regional-domain-name-placeholder")
 }
 
 # For the static web app bucket
@@ -43,8 +43,8 @@ module "static_web_app_policy" {
 module "uploads_bucket_policy" {
   source = "./modules/cloudfront_s3_bucket_policy"
 
-  bucket_id      = try(data.terraform_remote_state.backend_app.outputs.uploads_bucket_id, "uploads-bucket-id-placeholder")
-  bucket_arn     = try(data.terraform_remote_state.backend_app.outputs.uploads_bucket_arn, "uploads-bucket-arn-placeholder")
+  bucket_id      = try(data.terraform_remote_state.backend.outputs.uploads_bucket_id, "uploads-bucket-id-placeholder")
+  bucket_arn     = try(data.terraform_remote_state.backend.outputs.uploads_bucket_arn, "uploads-bucket-arn-placeholder")
   cloudfront_arn = module.cloudfront.cloudfront_arn
   paths          = ["uploads/*", "thumbnails/*"]
 }
