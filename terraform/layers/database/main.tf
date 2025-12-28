@@ -10,7 +10,7 @@ module "db" {
   instance_class          = var.environment == "prod" ? "db.t3.medium" : "db.t3.micro"
   allocated_storage       = var.environment == "prod" ? 50 : 20 # GB
   storage_encrypted       = var.environment == "prod" ? true : false
-  multi_az                = true
+  multi_az                = var.environment == "ephemeral" ? false : true
   backup_retention_period = var.environment == "prod" ? 7 : 0 # number of days
 
   db_name  = "${var.environment}${replace(var.app_id, "-", "")}dbname"
