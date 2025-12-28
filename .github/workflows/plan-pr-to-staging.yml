@@ -40,7 +40,7 @@ jobs:
             -backend-config="bucket=trip-planner-states" \
             -backend-config="key=security/staging/terraform.tfstate" \
             -backend-config="region=eu-central-1" \
-            -backend-config="dynamodb_table=terraform-locks" \
+            -backend-config="dynamodb_table=staging-trip-planner-terraform-locks" \
             -backend-config="encrypt=true"
           terraform validate
 
@@ -104,7 +104,7 @@ jobs:
             -backend-config="bucket=trip-planner-states" \
             -backend-config="key=networking/staging/terraform.tfstate" \
             -backend-config="region=eu-central-1" \
-            -backend-config="dynamodb_table=terraform-locks" \
+            -backend-config="dynamodb_table=staging-trip-planner-terraform-locks" \
             -backend-config="encrypt=true"
           terraform validate
 
@@ -165,7 +165,7 @@ jobs:
             -backend-config="bucket=trip-planner-states" \
             -backend-config="key=database/staging/terraform.tfstate" \
             -backend-config="region=eu-central-1" \
-            -backend-config="dynamodb_table=terraform-locks" \
+            -backend-config="dynamodb_table=staging-trip-planner-terraform-locks" \
             -backend-config="encrypt=true"
           terraform validate
 
@@ -237,7 +237,7 @@ jobs:
             -backend-config="bucket=trip-planner-states" \
             -backend-config="key=backend/staging/terraform.tfstate" \
             -backend-config="region=eu-central-1" \
-            -backend-config="dynamodb_table=terraform-locks" \
+            -backend-config="dynamodb_table=staging-trip-planner-terraform-locks" \
             -backend-config="encrypt=true"
           terraform validate
 
@@ -307,7 +307,7 @@ jobs:
             -backend-config="bucket=trip-planner-states" \
             -backend-config="key=frontend/staging/terraform.tfstate" \
             -backend-config="region=eu-central-1" \
-            -backend-config="dynamodb_table=terraform-locks" \
+            -backend-config="dynamodb_table=staging-trip-planner-terraform-locks" \
             -backend-config="encrypt=true"
           terraform validate
 
