@@ -44,7 +44,7 @@ module "alb" {
   app_id                  = var.app_id
   backend_certificate_arn = var.backend_certificate_arn
   environment             = var.environment
-  hosted_zone_id          = var.route53_zone_name
+  hosted_zone_id          = var.hosted_zone_id
   public_subnets          = try(data.terraform_remote_state.networking.outputs.public_subnets, ["public-subnet-placeholder1", "public-subnet-placeholder2"])
   vpc_id                  = try(data.terraform_remote_state.networking.outputs.vpc_id, "vpc-id-placeholder")
 }

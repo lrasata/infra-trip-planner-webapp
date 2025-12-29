@@ -20,8 +20,13 @@ variable "alb_domain_name" {
   type        = string
 }
 
+variable "hosted_zone_id" {
+  description = "Route 53 Hosted Zone ID"
+  type        = string
+}
+
 variable "route53_zone_name" {
-  description = "Route 53 Hosted Zone ID for example.com"
+  description = "Route 53 Hosted Zone name for example.com"
   type        = string
 }
 
