@@ -60,7 +60,7 @@ module "ecs_service" {
   environment           = var.environment
   private_subnets       = try(data.terraform_remote_state.networking.outputs.private_subnets, ["private-subnet-placeholder1", "private-subnet-placeholder2"])
   sg_alb_id             = module.alb.sg_alb_id
-  sg_rds_id             = try(data.terraform_remote_state.database.outputs.rds_sg.id, "sg-rds-id-placeholder")
+  sg_rds_id             = try(data.terraform_remote_state.database.outputs.rds_sg_id, "sg-rds-id-placeholder")
   task_definition_arn   = module.ecs_task_definition.task_definition_arn
   vpc_id                = try(data.terraform_remote_state.networking.outputs.vpc_id, "vpc-id-placeholder")
 }
