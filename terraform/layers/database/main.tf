@@ -1,6 +1,6 @@
 module "db" {
   source     = "terraform-aws-modules/rds/aws"
-  version = "7.0.0"
+  version    = "7.0.0"
   identifier = "${var.environment}-${var.app_id}-db"
 
   # Restore from snapshot if provided, else create new DB

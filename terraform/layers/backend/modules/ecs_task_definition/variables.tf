@@ -62,6 +62,6 @@ variable "secrets_arn" {
   type = string
 }
 
-variable "account_id" {
+variable "secret_store_name" {
   type = string
 }
