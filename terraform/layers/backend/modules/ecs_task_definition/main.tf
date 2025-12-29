@@ -13,14 +13,6 @@ locals {
     { name = "DYNAMODB_TABLE_NAME", value = var.dynamo_db_table_name },
     { name = "S3_BUCKET_NAME", value = var.s3_bucket_id }
   ]
-
-  container_secrets = [
-    "SPRING_DATASOURCE_USERNAME",
-    "SPRING_DATASOURCE_PASSWORD",
-    "JWT_SECRET_KEY",
-    "SUPER_ADMIN_EMAIL",
-    "SUPER_ADMIN_PASSWORD"
-  ]
 }
 
 resource "aws_cloudwatch_log_group" "ecs_task_log_group" {
@@ -50,11 +42,27 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
       ],
       environment = local.container_environment,
       secrets = [
-        for key in local.container_secrets : {
-          name      = key
-          valueFrom = "${var.secrets_arn}:${key}::"
+        {
+          name      = "SPRING_DATASOURCE_USERNAME"
+          valueFrom = "${var.secrets_arn}:SPRING_DATASOURCE_USERNAME::"
+        },
+        {
+          name      = "SPRING_DATASOURCE_PASSWORD"
+          valueFrom = "${var.secrets_arn}:SPRING_DATASOURCE_PASSWORD::"
+        },
+        {
+          name      = "JWT_SECRET_KEY"
+          valueFrom = "${var.secrets_arn}:JWT_SECRET_KEY::"
+        },
+        {
+          name      = "SUPER_ADMIN_EMAIL"
+          valueFrom = "${var.secrets_arn}:SUPER_ADMIN_EMAIL::"
+        },
+        {
+          name      = "SUPER_ADMIN_PASSWORD"
+          valueFrom = "${var.secrets_arn}:SUPER_ADMIN_PASSWORD::"
         }
-      ],
+      ]
       logConfiguration = {
         logDriver = "awslogs"
         options = {
