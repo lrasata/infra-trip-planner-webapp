@@ -14,8 +14,8 @@ module "db" {
   backup_retention_period = var.environment == "prod" ? 7 : 0 # number of days
 
   db_name  = "${var.environment}${replace(var.app_id, "-", "")}dbname"
-  username = try(data.terraform_remote_state.security.outputs.datasource_username, "placeholder_username")
-  password = try(data.terraform_remote_state.security.outputs.datasource_password, "placeholder_password")
+  db_username = try(data.terraform_remote_state.security.outputs.datasource_username, "placeholder_username")
+  db_password = try(data.terraform_remote_state.security.outputs.datasource_password, "placeholder_password")
   port     = 5432
 
   vpc_security_group_ids = [aws_security_group.sg_rds.id]
