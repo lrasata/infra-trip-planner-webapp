@@ -61,7 +61,3 @@ variable "db_name" {
 variable "secrets_arn" {
   type = string
 }
-
-variable "secret_store_name" {
-  type = string
-}
