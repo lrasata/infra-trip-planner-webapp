@@ -27,7 +27,7 @@ module "ecs_task_definition" {
   environment             = var.environment
   region                  = var.region
   s3_bucket_id            = module.file_uploader.uploads_bucket_id
-  secrets_arn             = try(data.terraform_remote_state.database.outputs.secrets_arn, "secrets-arn-placeholder")
+  secrets_arn             = try(data.terraform_remote_state.security.outputs.secrets_arn, "secrets-arn-placeholder")
   super_admin_fullname    = var.super_admin_fullname
   task_execution_role_arn = module.ecs_task_execution_role.task_exec_role_arn
   cookie_same_site        = var.cookie_same_site
