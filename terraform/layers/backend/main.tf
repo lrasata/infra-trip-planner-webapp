@@ -18,7 +18,6 @@ module "ecs_task_execution_role" {
 module "ecs_task_definition" {
   source = "./modules/ecs_task_definition"
 
-
   allowed_origins         = var.allowed_origins
   app_id                  = var.app_id
   container_image         = var.container_image

@@ -50,9 +50,25 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
       ],
       environment = local.container_environment,
       secrets = [
-        for secret in local.container_secrets : {
-          name      = secret
-          valueFrom = "${var.secrets_arn}:${secret}::"
+        {
+          name      = "SPRING_DATASOURCE_USERNAME"
+          valueFrom = "${var.secrets_arn}:SPRING_DATASOURCE_USERNAME::"
+        },
+        {
+          name      = "SPRING_DATASOURCE_PASSWORD"
+          valueFrom = "${var.secrets_arn}:SPRING_DATASOURCE_PASSWORD::"
+        },
+        {
+          name      = "JWT_SECRET_KEY"
+          valueFrom = "${var.secrets_arn}:JWT_SECRET_KEY::"
+        },
+        {
+          name      = "SUPER_ADMIN_EMAIL"
+          valueFrom = "${var.secrets_arn}:SUPER_ADMIN_EMAIL::"
+        },
+        {
+          name      = "SUPER_ADMIN_PASSWORD"
+          valueFrom = "${var.secrets_arn}:SUPER_ADMIN_PASSWORD::"
         }
       ],
       logConfiguration = {

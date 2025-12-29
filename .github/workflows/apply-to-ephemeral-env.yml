@@ -234,7 +234,7 @@ jobs:
             ### ✅ Ephemeral Environment Deployed Successfully
             
             **Environment:** ephemeral
-            **Domain:** ephemeral.epic-trip-planner.com
+            **Domain:** eph-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}.epic-trip-planner.com
             
             The changes have been successfully deployed to an ephemeral environment for testing.
             
