@@ -1,0 +1,79 @@
+name: Destroy Ephemeral Environment
+
+on:
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR Number'
+        required: true
+
+jobs:
+  destroy:
+    name: Destroy Ephemeral Terraform Layers
+    runs-on: ubuntu-latest
+    environment: ephemeral
+    permissions:
+      id-token: write
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        layer:
+          - backend
+          - database
+          - networking
+          - security
+
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_environment: ephemeral
+      TF_VAR_app_id: trip-planner-app
+      TF_VAR_azs: '["${{ secrets.AWS_REGION }}a", "${{ secrets.AWS_REGION }}b", "${{ secrets.AWS_REGION }}c"]'
+      TF_VAR_vpc_cidr: 10.42.0.0/16
+      TF_VAR_public_subnets_ips: '["10.42.101.0/24","10.42.102.0/24","10.42.103.0/24"]'
+      TF_VAR_private_subnets_ips: '["10.42.1.0/24","10.42.2.0/24","10.42.3.0/24"]'
+      TF_VAR_alb_domain_name: eph-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}-alb.epic-trip-planner.com
+      TF_VAR_route53_zone_name: epic-trip-planner.com
+      TF_VAR_container_image: lrasata/trip-planner-backend-app:1.1.0
+      TF_VAR_allowed_origins: https://eph-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}.epic-trip-planner.com
+      TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
+      TF_VAR_api_file_upload_domain_name: eph-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}-file-upload-api.epic-trip-planner.com
+      TF_VAR_backend_certificate_arn: ${{secrets.BACKEND_CERTIFICATE_ARN}}
+      TF_VAR_use_bucketav: false
+      TF_VAR_bucketav_sns_findings_topic_name: ""
+      TF_VAR_uploads_bucket_name: file-uploads-bucket-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+      TF_VAR_enable_transfer_acceleration: true
+      TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.12.2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/layers/${{ matrix.layer }}
+        run: |
+          terraform init \
+            -input=false \
+            -backend-config="bucket=trip-planner-states" \
+            -backend-config="key=${{ matrix.layer }}/ephemeral/terraform.tfstate" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="dynamodb_table=ephemeral-trip-planner-terraform-locks" \
+            -backend-config="encrypt=true"
+
+      - name: Terraform Destroy
+        working-directory: terraform/layers/${{ matrix.layer }}
+        run: terraform destroy -auto-approve

@@ -52,7 +52,7 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
       secrets = [
         for secret in local.container_secrets : {
           name      = secret
-          valueFrom = "${var.secrets_arn}:${secret}::"
+          valueFrom = "arn:aws:secretsmanager:${var.region}:${var.account_id}:secret:${secret}"
         }
       ],
       logConfiguration = {

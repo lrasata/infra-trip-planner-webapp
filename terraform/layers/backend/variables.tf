@@ -18,7 +18,6 @@ variable "app_id" {
 variable "alb_domain_name" {
   description = "The domain name for the API"
   type        = string
-  default     = "alb.epic-trip-planner.com"
 }
 
 variable "route53_zone_name" {
@@ -68,7 +67,6 @@ variable "notification_email" {
 variable "api_file_upload_domain_name" {
   description = "The domain name for the API to get pre-signed file upload URLs"
   type        = string
-  default     = "api-file-upload.epic-trip-planner.com"
 }
 
 variable "backend_certificate_arn" {
@@ -90,7 +88,6 @@ variable "bucketav_sns_findings_topic_name" {
 variable "uploads_bucket_name" {
   description = "The name of the S3 bucket for file uploads"
   type        = string
-  default     = "uploads-bucket"
 }
 
 variable "enable_transfer_acceleration" {

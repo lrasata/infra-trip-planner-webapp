@@ -61,3 +61,7 @@ variable "db_name" {
 variable "secrets_arn" {
   type = string
 }
+
+variable "account_id" {
+  type = string
+}

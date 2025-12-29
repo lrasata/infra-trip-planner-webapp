@@ -33,6 +33,7 @@ module "ecs_task_definition" {
   task_execution_role_arn = module.ecs_task_execution_role.task_exec_role_arn
   cookie_same_site        = var.cookie_same_site
   cookie_secure_attribute = var.cookie_secure_attribute
+  account_id              = data.aws_caller_identity.current.account_id
 }
 
 # ALB
