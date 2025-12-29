@@ -34,6 +34,15 @@ resource "aws_iam_policy" "secrets_access" {
           "secretsmanager:GetSecretValue"
         ],
         "Resource" : "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:${var.environment}/${var.app_id}/secrets-*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "ssm:GetParameters",
+          "ssm:GetParameter",
+          "ssm:GetParametersByPath"
+        ],
+        Resource = "*"
       }
     ]
   })
