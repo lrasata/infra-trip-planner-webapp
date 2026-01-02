@@ -210,6 +210,20 @@ jobs:
             -backend-config="dynamodb_table=ephemeral-trip-planner-terraform-locks" \
             -backend-config="encrypt=true"
 
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Build Lambda packages (ephemeral)
+        run: |
+          sudo apt-get update && sudo apt-get install -y build-essential python3 libvips-dev
+          cd terraform/layers/backend/.terraform/modules/file_uploader/terraform/modules/file_uploader/src/lambdas/get_presigned_url
+          npm ci --silent --no-audit
+          cd ../process_uploaded_file
+          npm ci --silent --no-audit
+
       - name: Terraform Apply
         working-directory: terraform/layers/backend
         run: |
