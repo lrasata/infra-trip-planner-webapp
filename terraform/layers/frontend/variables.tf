@@ -53,7 +53,6 @@ variable "api_file_upload_domain_name" {
 variable "api_locations_domain_name" {
   description = "The domain name for the API locations"
   type        = string
-  default     = "api-locations.epic-trip-planner.com"
 }
 
 
