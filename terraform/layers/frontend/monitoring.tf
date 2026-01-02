@@ -5,7 +5,7 @@ module "frontend_sns_alerts" {
   environment        = var.environment
   notification_email = var.notification_email
   app_id             = var.app_id
-  service_name       = module.cloudfront.cloudfront_domain_name
+  service_name       = "cloudfrontId${module.cloudfront.cloudfront_id}"
 }
 
 resource "aws_cloudwatch_metric_alarm" "cloudfront_5xx" {
