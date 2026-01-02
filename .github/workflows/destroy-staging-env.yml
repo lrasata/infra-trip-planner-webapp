@@ -50,6 +50,13 @@ jobs:
       TF_VAR_uploads_bucket_name: file-uploads-bucket-${{ github.event.inputs.environment }}
       TF_VAR_enable_transfer_acceleration: true
       TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
+      TF_VAR_cloudfront_domain_name: "${{ github.event.inputs.environment }}.epic-trip-planner.com"
+      TF_VAR_cloudfront_certificate_arn: ${{secrets.CLOUDFRONT_CERTIFICATE_ARN}}
+      TF_VAR_static_web_app_bucket_name: static-web-app-bucket-${{ github.event.inputs.environment }}
+      TF_VAR_api_locations_domain_name: ${{ github.event.inputs.environment }}-api-locations.epic-trip-planner.com
+      TF_VAR_API_CITIES_GEO_DB_URL: ${{secrets.API_CITIES_GEO_DB_URL}}
+      TF_VAR_API_COUNTRIES_GEO_DB_URL: ${{secrets.API_COUNTRIES_GEO_DB_URL}}
+      TF_VAR_GEO_DB_RAPID_API_HOST: ${{secrets.GEO_DB_RAPID_API_HOST}}
 
     steps:
       - name: Checkout repository
@@ -66,17 +73,19 @@ jobs:
           role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Terraform Init
-        working-directory: terraform/layers/${{ matrix.layer }}
+      - name: Destroy layers sequentially
         run: |
-          terraform init \
-            -input=false \
-            -backend-config="bucket=trip-planner-states" \
-            -backend-config="key=${{ matrix.layer }}/${{ github.event.inputs.environment }}/terraform.tfstate" \
-            -backend-config="region=eu-central-1" \
-            -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-trip-planner-terraform-locks" \
-            -backend-config="encrypt=true"
-
-      - name: Terraform Destroy
-        working-directory: terraform/layers/${{ matrix.layer }}
-        run: terraform destroy -auto-approve
+          layers=("frontend" "backend" "database" "networking" "security")
+          for layer in "${layers[@]}"; do
+            echo "==== Destroying $layer ===="
+            cd $GITHUB_WORKSPACE/terraform/layers/$layer
+            terraform init \
+              -input=false \
+              -backend-config="bucket=trip-planner-states" \
+              -backend-config="key=${layer}/ephemeral/terraform.tfstate" \
+              -backend-config="region=eu-central-1" \
+              -backend-config="dynamodb_table=ephemeral-trip-planner-terraform-locks" \
+              -backend-config="encrypt=true"
+            terraform destroy -auto-approve
+            cd ../../../..
+          done
