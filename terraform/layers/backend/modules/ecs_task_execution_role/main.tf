@@ -22,8 +22,8 @@ resource "aws_iam_role" "ecs_task_execution_role" {
 
 data "aws_caller_identity" "current" {}
 
-resource "aws_iam_policy" "secrets_access" {
-  name = "${var.environment}-${var.app_id}-secrets-iam-policy"
+resource "aws_iam_policy" "secrets_kms_access" {
+  name = "${var.environment}-${var.app_id}-secrets-and-kms-iam-policy"
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -41,6 +41,14 @@ resource "aws_iam_policy" "secrets_access" {
           "ssm:GetParameters",
           "ssm:GetParameter",
           "ssm:GetParametersByPath"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow",
+        Action   = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
         ],
         Resource = "*"
       }
