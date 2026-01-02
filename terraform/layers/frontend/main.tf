@@ -19,6 +19,7 @@ module "cloudfront" {
   api_file_upload_domain_name                = var.api_file_upload_domain_name
   api_locations_domain_name                  = var.api_locations_domain_name
   app_id                                     = var.app_id
+  cloudfront_domain_name                     = var.cloudfront_domain_name
   cloudfront_certificate_arn                 = var.cloudfront_certificate_arn
   cloudfront_waf_arn                         = aws_wafv2_web_acl.cloudfront_waf.arn
   environment                                = var.environment

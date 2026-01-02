@@ -43,7 +43,6 @@ variable "file_upload_auth_secret" {
 variable "cloudfront_domain_name" {
   description = "The domain name for CloudFront distribution"
   type        = string
-  default     = "epic-trip-planner.com"
 }
 
 variable "cloudfront_certificate_arn" {
