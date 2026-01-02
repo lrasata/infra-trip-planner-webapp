@@ -18,7 +18,6 @@ variable "app_id" {
 variable "cloudfront_domain_name" {
   description = "The domain name for CloudFront distribution"
   type        = string
-  default     = "epic-trip-planner.com"
 }
 
 variable "cloudfront_certificate_arn" {
@@ -45,7 +44,6 @@ variable "static_web_app_bucket_name" {
 variable "api_file_upload_domain_name" {
   description = "The domain name for the API to get pre-signed file upload URLs"
   type        = string
-  default     = "api-file-upload.epic-trip-planner.com"
 }
 
 #------------ Api locations -----------------------------
