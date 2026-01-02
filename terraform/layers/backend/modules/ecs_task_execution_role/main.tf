@@ -74,5 +74,5 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_role" {
 # Attach dynamic separately
 resource "aws_iam_role_policy_attachment" "ecs_execution_role_dynamic" {
   role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = aws_iam_policy.secrets_access.arn
+  policy_arn = aws_iam_policy.secrets_kms_access.arn
 }
