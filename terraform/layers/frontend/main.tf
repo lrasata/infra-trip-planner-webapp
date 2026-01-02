@@ -23,7 +23,7 @@ module "cloudfront" {
   cloudfront_certificate_arn                 = var.cloudfront_certificate_arn
   cloudfront_waf_arn                         = aws_wafv2_web_acl.cloudfront_waf.arn
   environment                                = var.environment
-  file_upload_auth_secret                    = try(data.terraform_remote_state.backend.outputs.file_upload_auth_secret, "file-upload-auth-secret-placeholder")
+  file_upload_auth_secret                    = try(data.terraform_remote_state.security.outputs.file_upload_auth_secret, "file-upload-auth-secret-placeholder")
   locations_auth_secret                      = try(data.terraform_remote_state.security.outputs.locations_auth_secret, "locations-auth-secret-placeholder")
   spa_fallback_qualified_arn                 = module.spa_fallback.lambda_at_edge_arn
   static_web_app_bucket_regional_domain_name = module.s3.bucket_regional_domain_name
