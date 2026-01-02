@@ -6,8 +6,8 @@ output "cloudfront_id" {
   value = module.cloudfront.cloudfront_id
 }
 
-output "s3_bucket_name" {
-  value = module.s3.bucket_name
+output "static_web_app_bucket_name" {
+  value = module.s3.bucket_id
 }
 
 output "api_locations_domain_name" {
