@@ -24,6 +24,10 @@ resource "aws_cloudwatch_metric_alarm" "rds_free_storage" {
   dimensions = {
     DBInstanceIdentifier = module.db.db_instance_identifier
   }
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 }
 
 resource "aws_cloudwatch_metric_alarm" "rds_availability" {
@@ -40,5 +44,9 @@ resource "aws_cloudwatch_metric_alarm" "rds_availability" {
 
   dimensions = {
     DBInstanceIdentifier = module.db.db_instance_identifier
+  }
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
   }
 }

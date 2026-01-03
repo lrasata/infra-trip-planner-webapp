@@ -26,6 +26,10 @@ locals {
 resource "aws_cloudwatch_log_group" "ecs_task_log_group" {
   name              = "${var.environment}/${var.app_id}/ecs-task"
   retention_in_days = 7
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 }
 
 resource "aws_ecs_task_definition" "ecs_task_definition" {

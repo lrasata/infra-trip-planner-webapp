@@ -15,12 +15,20 @@ resource "aws_ecs_service" "ecs_service" {
     container_port   = 8080
   }
   health_check_grace_period_seconds = 120
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 }
 
 resource "aws_security_group" "sg_ecs" {
   name        = "${var.environment}-ecs-sg"
   description = "Allow outbound for ECS tasks and ALB to access ECS Tasks"
   vpc_id      = var.vpc_id
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 
   # Allow traffic from the ALB on port 8080
   ingress {

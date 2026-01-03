@@ -24,4 +24,8 @@ resource "aws_cloudwatch_metric_alarm" "cloudfront_5xx" {
     DistributionId = module.cloudfront.cloudfront_id
     Region         = "Global"
   }
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 }

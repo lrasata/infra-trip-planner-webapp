@@ -6,6 +6,11 @@ resource "aws_wafv2_web_acl" "alb_waf" {
     allow {}
   }
 
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
+
   visibility_config {
     cloudwatch_metrics_enabled = true
     metric_name                = "${var.environment}-${var.app_id}-AlbWAF"

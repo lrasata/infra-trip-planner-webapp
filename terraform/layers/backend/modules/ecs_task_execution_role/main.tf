@@ -45,8 +45,8 @@ resource "aws_iam_policy" "secrets_kms_access" {
         Resource = "*"
       },
       {
-        Effect   = "Allow",
-        Action   = [
+        Effect = "Allow",
+        Action = [
           "kms:Decrypt",
           "kms:GenerateDataKey"
         ],

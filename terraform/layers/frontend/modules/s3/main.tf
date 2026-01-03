@@ -1,5 +1,9 @@
 resource "aws_s3_bucket" "s3_bucket" {
   bucket = "${var.environment}-${var.app_id}-${var.static_web_app_bucket_name}"
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 }
 
 #  Block public access to the S3 bucket

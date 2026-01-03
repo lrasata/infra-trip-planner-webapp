@@ -66,6 +66,10 @@ resource "aws_security_group" "sg_alb" {
   name        = "${var.environment}-${var.app_id}-alb-sg"
   description = "Allow HTTPS"
   vpc_id      = var.vpc_id
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 
   ingress {
     from_port   = 443

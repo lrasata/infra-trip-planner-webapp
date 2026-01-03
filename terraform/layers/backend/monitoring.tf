@@ -24,6 +24,10 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
     ClusterName = module.ecs_cluster.cluster_name
     ServiceName = module.ecs_service.ecs_service_name
   }
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 }
 
 # ECS - Memory Utilization Alarm
@@ -42,6 +46,10 @@ resource "aws_cloudwatch_metric_alarm" "ecs_memory_high" {
     ClusterName = module.ecs_cluster.cluster_name
     ServiceName = module.ecs_service.ecs_service_name
   }
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 }
 
 # ECS - Unhealthy Tasks Alarm
@@ -59,6 +67,10 @@ resource "aws_cloudwatch_metric_alarm" "ecs_unhealthy_tasks" {
   dimensions = {
     ClusterName = module.ecs_cluster.cluster_name
     ServiceName = module.ecs_service.ecs_service_name
+  }
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
   }
 }
 
@@ -80,6 +92,10 @@ resource "aws_cloudwatch_metric_alarm" "alb_unhealthy_hosts" {
 
   alarm_description = "ALB target group has unhealthy hosts"
   alarm_actions     = [module.backend_sns_alerts.sns_topic_alerts_arn]
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 }
 
 # ALB - 5xx errors spike
@@ -99,6 +115,10 @@ resource "aws_cloudwatch_metric_alarm" "alb_5xx_errors" {
 
   alarm_description = "ALB is returning too many 5xx errors"
   alarm_actions     = [module.backend_sns_alerts.sns_topic_alerts_arn]
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 }
 
 # ALB - High latency
@@ -119,4 +139,8 @@ resource "aws_cloudwatch_metric_alarm" "alb_high_latency" {
 
   alarm_description = "ALB latency above 2 seconds for 10 minutes"
   alarm_actions     = [module.backend_sns_alerts.sns_topic_alerts_arn]
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 }

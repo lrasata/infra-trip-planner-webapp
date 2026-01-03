@@ -4,6 +4,11 @@ resource "aws_wafv2_web_acl" "cloudfront_waf" {
   description = "WAF for CloudFront distribution of the Trip Planner app"
   scope       = "CLOUDFRONT"
 
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
+
   default_action {
     allow {}
   }

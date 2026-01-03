@@ -3,6 +3,11 @@ module "db" {
   version    = "7.0.0"
   identifier = "${var.environment}-${var.app_id}-db"
 
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
+
   # Restore from snapshot if provided, else create new DB
   snapshot_identifier = var.restore_db_snapshot_id != "" ? var.restore_db_snapshot_id : null
 
@@ -31,12 +36,20 @@ module "db" {
 resource "aws_db_subnet_group" "rds_subnet_group" {
   name       = "${var.environment}-${var.app_id}-rds-subnet-group"
   subnet_ids = try(data.terraform_remote_state.networking.outputs.private_subnets, ["subnet-placeholder1", "subnet-placeholder2"])
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 }
 
 resource "aws_security_group" "sg_rds" {
   name        = "${var.environment}-${var.app_id}-rds-sg"
   description = "Allow ECS tasks access to database and internet"
   vpc_id      = try(data.terraform_remote_state.networking.outputs.vpc_id, "vpc-placeholder")
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 
   ingress {
     from_port   = 5432
