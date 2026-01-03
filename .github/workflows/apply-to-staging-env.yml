@@ -1,0 +1,322 @@
+name: Apply to Staging Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - staging
+
+jobs:
+  apply-security:
+    name: Apply to ${{ github.event.inputs.environment }} Env (security)
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_app_id: trip-planner-app
+      TF_VAR_environment: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.12.2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/layers/security
+        run: |
+          terraform init \
+            -input=false \
+            -backend-config="bucket=trip-planner-states" \
+            -backend-config="key=security/${{ github.event.inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-trip-planner-terraform-locks" \
+            -backend-config="encrypt=true"
+
+      - name: Terraform Apply
+        working-directory: terraform/layers/security
+        run: |
+          terraform apply -auto-approve
+
+  apply-networking:
+    name: Apply to ${{ github.event.inputs.environment }} Env (networking)
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    needs: apply-security
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_environment: ${{ github.event.inputs.environment }}
+      TF_VAR_azs: '["${{ secrets.AWS_REGION }}a", "${{ secrets.AWS_REGION }}b", "${{ secrets.AWS_REGION }}c"]'
+      TF_VAR_vpc_cidr: 10.0.0.0/16
+      TF_VAR_public_subnets_ips: '["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]'
+      TF_VAR_private_subnets_ips: '["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]'
+      TF_VAR_app_id: trip-planner-app
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.12.2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/layers/networking
+        run: |
+          terraform init \
+            -input=false \
+            -backend-config="bucket=trip-planner-states" \
+            -backend-config="key=networking/${{ github.event.inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-trip-planner-terraform-locks" \
+            -backend-config="encrypt=true"
+
+      - name: Terraform Apply
+        working-directory: terraform/layers/networking
+        run: |
+          terraform apply -auto-approve
+    
+  apply-database:
+    name: Apply to ${{ github.event.inputs.environment }} Env (database)
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    needs: apply-networking
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_environment: ${{ github.event.inputs.environment }}      
+      TF_VAR_app_id: trip-planner-app
+      TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.12.2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/layers/database
+        run: |
+          terraform init \
+            -input=false -upgrade \
+            -backend-config="bucket=trip-planner-states" \
+            -backend-config="key=database/${{ github.event.inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-trip-planner-terraform-locks" \
+            -backend-config="encrypt=true"
+
+      - name: Terraform Apply
+        working-directory: terraform/layers/database
+        run: |
+          terraform apply -auto-approve
+
+  apply-backend:
+    name: Apply to ${{ github.event.inputs.environment }} Env (backend)
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    needs: apply-database
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_environment: ${{ github.event.inputs.environment }}
+      TF_VAR_app_id: trip-planner-app
+      TF_VAR_alb_domain_name: ${{ github.event.inputs.environment }}-alb.epic-trip-planner.com
+      TF_VAR_route53_zone_name: epic-trip-planner.com
+      TF_VAR_hosted_zone_id: ${{secrets.HOSTED_ZONE_ID}}
+      TF_VAR_container_image: lrasata/trip-planner-backend-app:1.1.0
+      TF_VAR_allowed_origins: https://${{ github.event.inputs.environment }}.epic-trip-planner.com
+      TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
+      TF_VAR_api_file_upload_domain_name: ${{ github.event.inputs.environment }}-file-upload-api.epic-trip-planner.com
+      TF_VAR_backend_certificate_arn: ${{secrets.BACKEND_CERTIFICATE_ARN}}
+      TF_VAR_use_bucketav: false
+      TF_VAR_bucketav_sns_findings_topic_name: ""
+      TF_VAR_uploads_bucket_name: file-uploads-bucket-${{ github.event.inputs.environment }}
+      TF_VAR_enable_transfer_acceleration: true
+      TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.12.2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/layers/backend
+        run: |
+          terraform init \
+            -input=false -upgrade \
+            -backend-config="bucket=trip-planner-states" \
+            -backend-config="key=backend/${{ github.event.inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-trip-planner-terraform-locks" \
+            -backend-config="encrypt=true"
+
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Build Lambda packages (${{ github.event.inputs.environment }})
+        run: |
+          sudo apt-get update && sudo apt-get install -y build-essential python3 libvips-dev
+          cd terraform/layers/backend/.terraform/modules/file_uploader/terraform/modules/file_uploader/src/lambdas/get_presigned_url
+          npm ci --silent --no-audit
+          cd ../process_uploaded_file
+          npm ci --silent --no-audit
+
+      - name: Terraform Apply
+        working-directory: terraform/layers/backend
+        run: |
+          terraform apply -auto-approve
+
+  apply-frontend:
+    name: Apply to ${{ github.event.inputs.environment }} Env (frontend)
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    needs: apply-security
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_environment: ${{ github.event.inputs.environment }}
+      TF_VAR_app_id: trip-planner-app
+      TF_VAR_cloudfront_domain_name: "${{ github.event.inputs.environment }}.epic-trip-planner.com"
+      TF_VAR_cloudfront_certificate_arn: ${{secrets.CLOUDFRONT_CERTIFICATE_ARN}}
+      TF_VAR_backend_certificate_arn: ${{secrets.BACKEND_CERTIFICATE_ARN}}
+      TF_VAR_static_web_app_bucket_name: static-web-app-bucket-${{ github.event.inputs.environment }}
+      TF_VAR_api_file_upload_domain_name: ${{ github.event.inputs.environment }}-file-upload-api.epic-trip-planner.com
+      TF_VAR_api_locations_domain_name: ${{ github.event.inputs.environment }}-api-locations.epic-trip-planner.com
+      TF_VAR_API_CITIES_GEO_DB_URL: ${{secrets.API_CITIES_GEO_DB_URL}}
+      TF_VAR_API_COUNTRIES_GEO_DB_URL: ${{secrets.API_COUNTRIES_GEO_DB_URL}}
+      TF_VAR_GEO_DB_RAPID_API_HOST: ${{secrets.GEO_DB_RAPID_API_HOST}}
+      TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.12.2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/layers/frontend
+        run: |
+          terraform init \
+            -input=false -upgrade \
+            -backend-config="bucket=trip-planner-states" \
+            -backend-config="key=frontend/${{ github.event.inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-trip-planner-terraform-locks" \
+            -backend-config="encrypt=true"
+
+      - name: Terraform Apply
+        working-directory: terraform/layers/frontend
+        run: |
+          terraform apply -auto-approve
+
+  comment-deployment:
+    name: Comment Deployment Result
+    runs-on: ubuntu-latest
+    needs: [apply-security, apply-networking, apply-database, apply-backend, apply-frontend]
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Comment deployment success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const commentBody = `
+            ### ✅ ${{ github.event.inputs.environment }} Environment Deployed Successfully
+            
+            **Environment:** ${{ github.event.inputs.environment }}
+            **Domain:** ${{ github.event.inputs.environment }}.epic-trip-planner.com
+            
+            The changes have been successfully deployed to the ${{ github.event.inputs.environment }} environment.
+            `;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 1,  # Placeholder, adjust as needed
+              body: commentBody
+            });
+
+      - name: Comment deployment failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const commentBody = `
+            ### ❌ ${{ github.event.inputs.environment }} Environment Deployment Failed
+            
+            The deployment to ${{ github.event.inputs.environment }} environment failed. Please check the workflow logs for details.
+            `;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 1,  # Placeholder, adjust as needed
+              body: commentBody
+            });
