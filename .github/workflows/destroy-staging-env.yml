@@ -42,7 +42,7 @@ jobs:
       TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
       TF_VAR_cloudfront_domain_name: "${{ github.event.inputs.environment }}.epic-trip-planner.com"
       TF_VAR_cloudfront_certificate_arn: ${{secrets.CLOUDFRONT_CERTIFICATE_ARN}}
-      TF_VAR_static_web_app_bucket_name: static-web-app-bucket-${{ github.event.inputs.environment }}
+      TF_VAR_static_web_app_bucket_name: static-web-app-bucket
       TF_VAR_api_locations_domain_name: ${{ github.event.inputs.environment }}-api-locations.epic-trip-planner.com
       TF_VAR_API_CITIES_GEO_DB_URL: ${{secrets.API_CITIES_GEO_DB_URL}}
       TF_VAR_API_COUNTRIES_GEO_DB_URL: ${{secrets.API_COUNTRIES_GEO_DB_URL}}
@@ -72,9 +72,9 @@ jobs:
             terraform init \
               -input=false \
               -backend-config="bucket=trip-planner-states" \
-              -backend-config="key=${layer}/ephemeral/terraform.tfstate" \
+              -backend-config="key=${layer}/${{ github.event.inputs.environment }}/terraform.tfstate" \
               -backend-config="region=eu-central-1" \
-              -backend-config="dynamodb_table=ephemeral-trip-planner-terraform-locks" \
+              -backend-config="dynamodb_table=${{ github.event.inputs.environment }}-trip-planner-terraform-locks" \
               -backend-config="encrypt=true"
             terraform destroy -auto-approve
             cd ../../../..
