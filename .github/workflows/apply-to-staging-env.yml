@@ -298,7 +298,7 @@ jobs:
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: 1,  # Placeholder, adjust as needed
+              issue_number: context.issue.number,  
               body: commentBody
             });
 
@@ -317,6 +317,6 @@ jobs:
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: 1,  # Placeholder, adjust as needed
+              issue_number: context.issue.number,
               body: commentBody
             });
