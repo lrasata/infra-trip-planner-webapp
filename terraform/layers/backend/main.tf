@@ -89,6 +89,6 @@ module "image_moderator" {
   environment               = var.environment
   s3_src_bucket_name        = module.file_uploader.uploads_bucket_id
   s3_src_bucket_arn         = module.file_uploader.uploads_bucket_arn
-  s3_quarantine_bucket_name = var.quarantine_bucket_name
+  s3_quarantine_bucket_name = "${var.quarantine_bucket_name}-${data.aws_caller_identity.current.account_id}"
   admin_email               = var.notification_email
 }

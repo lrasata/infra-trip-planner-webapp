@@ -234,7 +234,7 @@ jobs:
     name: Apply to Eph Env (frontend)
     runs-on: ubuntu-latest
     environment: ephemeral
-    needs: apply-security
+    needs: apply-backend
     permissions:
       id-token: write
       contents: read
