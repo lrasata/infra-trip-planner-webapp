@@ -1,179 +1,55 @@
-# Instructions for Setting Up Infrastructure with Terraform
+# Recommended Deployment Method
 
-## Prerequisites
+It is **recommended** to use the CI/CD pipeline for deploying infrastructure to different  environments. This ensures consistency, automation, and reduces manual errors.
 
-1. **Terraform** >= 1.3 installed: https://www.terraform.io/downloads.html
-2. Access to **AWS configured**
-3. **Secret values** are configured saved in Secrets Manager:
-   - secrets : `${var.environment}/trip-planner-app/secrets`
-     - JWT_SECRET_KEY : TripPlannerAPI JWT secret
-     - SPRING_DATASOURCE_USERNAME : RDS database username
-     - SPRING_DATASOURCE_PASSWORD : RDS database password
-     - SUPER_ADMIN_EMAIL : Email of the super admin user for TripPlannerAPI
-     - SUPER_ADMIN_PASSWORD : Password of the super admin user for TripPlannerAPI
-     - GEO_DB_RAPID_API_KEY : RapidAPI key for GeoDB
-     - API_GW_LOCATIONS_AUTH_SECRET : Secret value of header `x-api-gateway-locations-auth` to request data from LocationsAPI
-     - API_GW_IMG_UPLOAD_AUTH_SECRET : Secret value of header `x-api-gateway-img-upload-auth` to request presigned url for image upload
-4. The **Trip-planner-web-app** has been built and synced with the s3 bucket by the [CI/CD pipeline](https://github.com/lrasata/trip-planner-web-app/actions/workflows/release.yml:
-   - Trip-planner-web-app has been built with correct environment variables set:
-     - VITE_API_URL: e.g. `VITE_API_URL=https://staging-alb.epic-trip-planner.com`
-     - VITE_API_LOCATIONS: e.g. `VITE_API_LOCATIONS=https://staging.epic-trip-planner.com/locations`
-     - VITE_API_UPLOAD_MEDIA: e.g. `VITE_API_UPLOAD_MEDIA=https://staging.epic-trip-planner.com/upload-url`
-5. Download the lastest artifact from: https://github.com/lrasata/infra-image-uploader/tree/main/artifacts
-   - Unzip the artifact and copy the content inside a build folder such as `lambda_process_uploaded_file_build`
-     - <img src="./docs/build-structure-lambda-process-uploaded-file.png" alt="build-folder-structure"> 
-   - Update `image_uploader.tf` and to refer the build folder:
-     - `lambda_process_uploaded_file_dir = "./lambda_process_uploaded_file_build"`
-6. Plan and define **IPv4 address range** used by the VPC which has 3 AZs and contains 3 Public subnets and 3 Private Subnets. You will have to provide those values as variables or default values will be applied.
+- For **ephemeral** environments (PR-based): Use the `apply-to-ephemeral-env.yml` workflow, triggered on PR approval.
+- For **staging**: Use the `apply-to-staging-env.yml` workflow, triggered manually by selecting the environment.
 
+The workflows handle Terraform initialization, planning, and application automatically. Below is a list of all TF_VAR environment variables used in the CI/CD pipeline, along with their descriptions, for reference and troubleshooting:
 
-## Getting Started
+## TF_VAR Variables Used in CI/CD Pipeline
 
-**1. Clone the repository:**
+| Variable | Description |
+|----------|-------------|
+| TF_VAR_region | AWS region (e.g., eu-central-1) |
+| TF_VAR_app_id | Application identifier (e.g., trip-planner-app) |
+| TF_VAR_environment | Deployment environment (staging or production) |
+| TF_VAR_azs | List of availability zones (e.g., ["eu-central-1a", "eu-central-1b", "eu-central-1c"]) |
+| TF_VAR_vpc_cidr | VPC CIDR block (e.g., 10.42.0.0/16) |
+| TF_VAR_public_subnets_ips | List of public subnet CIDR blocks (e.g., ["10.42.101.0/24","10.42.102.0/24","10.42.103.0/24"]) |
+| TF_VAR_private_subnets_ips | List of private subnet CIDR blocks (e.g., ["10.42.1.0/24","10.42.2.0/24","10.42.3.0/24"]) |
+| TF_VAR_notification_email | Email for notifications (from secrets) |
+| TF_VAR_alb_domain_name | ALB domain name (e.g., staging-alb.epic-trip-planner.com) |
+| TF_VAR_route53_zone_name | Route53 hosted zone name (e.g., epic-trip-planner.com) |
+| TF_VAR_hosted_zone_id | Route53 hosted zone ID (from secrets) |
+| TF_VAR_container_image | Docker container image (e.g., lrasata/trip-planner-backend-app:1.1.0) |
+| TF_VAR_allowed_origins | Allowed CORS origins (e.g., https://staging.epic-trip-planner.com) |
+| TF_VAR_api_file_upload_domain_name | API domain for file uploads (e.g., staging-file-upload-api.epic-trip-planner.com) |
+| TF_VAR_backend_certificate_arn | ARN of the backend certificate (from secrets) |
+| TF_VAR_use_bucketav | Whether to use bucket antivirus (default: false) |
+| TF_VAR_bucketav_sns_findings_topic_name | SNS topic for bucket AV findings ("" if none) |
+| TF_VAR_uploads_bucket_name | S3 bucket for uploads (e.g., file-uploads-bucket-staging) |
+| TF_VAR_enable_transfer_acceleration | Enable S3 transfer acceleration (default: true) |
+| TF_VAR_secret_store_name | Name of the secret store (from secrets) |
+| TF_VAR_cloudfront_domain_name | CloudFront domain name (e.g., staging.epic-trip-planner.com) |
+| TF_VAR_cloudfront_certificate_arn | ARN of the CloudFront certificate (from secrets) |
+| TF_VAR_static_web_app_bucket_name | S3 bucket for static web app (e.g., static-web-app-bucket-staging) |
+| TF_VAR_api_locations_domain_name | API domain for locations (e.g., staging-api-locations.epic-trip-planner.com) |
+| TF_VAR_API_CITIES_GEO_DB_URL | URL for cities GeoDB API (from secrets) |
+| TF_VAR_API_COUNTRIES_GEO_DB_URL | URL for countries GeoDB API (from secrets) |
+| TF_VAR_GEO_DB_RAPID_API_HOST | Host for GeoDB RapidAPI (from secrets) |
 
-```bash
-git clone https://github.com/lrasata/infra-trip-design-app.git
-cd infra-trip-design-app
-```
+### Instruction to restore database from snapshot
 
-**2. Define environment-specific values:**
-
-This project uses `.tfvars` files to handle multiple environments (e.g., dev, staging, prod). Environment-specific values like ALB names, domains, and certificates are defined in these files.
-
-**Define .tfvars files in `terraform/common` folder:**
-
-````text
-# terraform/common/staging.tfvars
-region              = "eu-central-1"
-azs                 = ["eu-central-1a", "eu-central-1b", "eu-central-1c"]
-vpc_cidr            = "10.0.0.0/16"
-public_subnets_ips  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
-private_subnets_ips = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-
-environment               = "staging"
-api_locations_domain_name = "staging-api-locations.epic-trip-planner.com"
-alb_domain_name           = "staging-alb.epic-trip-planner.com"
-
-cloudfront_domain_name = "staging.epic-trip-planner.com"
-allowed_origins        = "https://staging.epic-trip-planner.com" # this cannot be * if allowCredentials is true - rejected by Spring
-
-container_image      = "lrasata/trip-planner-backend-app:1.0.0"
-super_admin_fullname = "admin"
-
-API_CITIES_GEO_DB_URL    = "https://wft-geo-db.p.rapidapi.com/v1/geo/cities"
-API_COUNTRIES_GEO_DB_URL = "https://wft-geo-db.p.rapidapi.com/v1/geo/countries"
-GEO_DB_RAPID_API_HOST    = "wft-geo-db.p.rapidapi.com"
-
-bucket_name = "trip-planner-app-bucket"
-
-backend_certificate_arn    = 
-cloudfront_certificate_arn = 
-
-hosted_zone_id = 
-
-notification_email = 
-
-# image uploader variables
-api_image_upload_domain_name                  = "staging-api-image-upload.epic-trip-planner.com"
-uploads_bucket_name                           = "trip-planner-app-media-uploads-bucket"
-enable_transfer_acceleration                  = true
-lambda_upload_presigned_url_expiration_time_s = 300 # 5min
-use_bucketav                                  = false
-bucketav_sns_findings_topic_name              = ""
-dynamodb_partition_key                        = "trip_id"
-dynamodb_sort_key                             = "file_key"
-
-restore_rds_snapshot_id                       = 
-````
-
-````text
-# terraform/common/prod.tfvars
-region = "eu-central-1"
-
-environment               = "prod"
-api_locations_domain_name = "api-locations.epic-trip-planner.com"
-alb_domain_name           = "alb.epic-trip-planner.com"
-
-cloudfront_domain_name = "epic-trip-planner.com"
-allowed_origins        = "https://epic-trip-planner.com" # this cannot be * if allowCredentials is true - rejected by Spring
-
-
-container_image      = "lrasata/trip-planner-backend-app:1.0.0"
-super_admin_fullname = "admin"
-
-API_CITIES_GEO_DB_URL    = "https://wft-geo-db.p.rapidapi.com/v1/geo/cities"
-API_COUNTRIES_GEO_DB_URL = "https://wft-geo-db.p.rapidapi.com/v1/geo/countries"
-GEO_DB_RAPID_API_HOST    = "wft-geo-db.p.rapidapi.com"
-
-bucket_name = "trip-planner-app-bucket"
-
-backend_certificate_arn    = 
-cloudfront_certificate_arn = 
-
-hosted_zone_id =
-
-notification_email = 
-
-# image uploader variables
-api_image_upload_domain_name                  = "api-image-upload.epic-trip-planner.com"
-uploads_bucket_name                           = "trip-planner-app-media-uploads-bucket"
-enable_transfer_acceleration                  = true
-lambda_upload_presigned_url_expiration_time_s = 300 # 5min
-use_bucketav                                  = false
-bucketav_sns_findings_topic_name              = ""
-dynamodb_partition_key                        = "trip_id"
-dynamodb_sort_key                             = "file_key"
-
-restore_rds_snapshot_id                       =
-````
-
-**3. Initialize Terraform:**
-
-Create s3 bucket which will be used to store Terraform state files:
-
-````bash
-aws s3 mb s3://trip-planner-states --region eu-central-1
-````
-
-It is recommended to initialize and deploy each layout in the following order:
-1. `terraform/security`
-2. `terraform/networking`
-3. `terraform/database`
-4. `terraform/backend-app`
-5. `terraform/frontend-app`
-
-Move to the specified folder, example: `terraform/security` folder and run:
-````bash
-terraform init
-
-# format configuration and validate configuration
-terraform fmt
-terraform validate
-````
-
-Plan and apply for a specific environment:
-
-````text
-terraform plan -var-file="../common/staging.tfvars" -compact-warnings
-terraform apply -var-file="../common/staging.tfvars" -compact-warnings -auto-approve
-````
-
-#### Instruction to restore database from snapshot
-
-Recreate DB from snapshot, by providing `restore_snapshot_id=<your-snapshot-id>` in `../common/staging.tfvars` and run : 
+Recreate DB from snapshot, by providing `restore_snapshot_id=<your-snapshot-id>` in `../common/staging.tfvars` and run: 
 
 ````text
 terraform apply -var-file="../common/staging.tfvars" -compact-warnings -auto-approve
 ````
 
+### Backup and restore DynamoDB table
 
-## Notes
-
-- Always review the output of terraform plan before applying changes.
-- Keep .terraform.lock.hcl committed for consistent provider versions.
-
-## Backup and restore DynamoDB table
-### Create a backup of DynamoDB table
+#### Create a backup of DynamoDB table
 
 ````bash
 ./scripts/backup_dynamodb.sh staging-files-metadata backup-staging-files-metadata-20251101-1820
@@ -184,19 +60,3 @@ terraform apply -var-file="../common/staging.tfvars" -compact-warnings -auto-app
 ````bash
 ./scripts/restore_dynamodb_backup.sh staging-files-metadata staging-temp-table arn:aws:dynamodb:eu-central-1:<id>:table/staging-files-metadata/backup/<id>
 ````
-
-## Destroying Infrastructure
-
-To tear down all resources managed by this project:
-````bash
-terraform destroy -var-file="../common/staging.tfvars" -compact-warnings -auto-approve
-````
-or run:
-
-````bash
-./scripts/deploy.sh destroy -auto-approve
-````
-> AWS will create a final snapshot of the rds database automatically because skip_final_snapshot = false.
-
-
-Replace staging.tfvars with the appropriate tfvars environment file.

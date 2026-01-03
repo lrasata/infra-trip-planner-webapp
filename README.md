@@ -2,9 +2,12 @@
 
 ![Staging Plan](https://github.com/lrasata/infra-trip-planner-webapp/actions/workflows/plan-pr-to-staging.yml/badge.svg)
 
+![Staging Apply](https://github.com/lrasata/infra-trip-planner-webapp/actions/workflows/apply-to-staging-env.yml/badge.svg)
+
 ![Ephemeral Apply](https://github.com/lrasata/infra-trip-planner-webapp/actions/workflows/apply-to-ephemeral-env.yml/badge.svg)
 
-# Table of Contents
+## Table of Contents
+
 - [Backend Infrastructure (TripPlannerAPI)](#backend-infrastructure-tripplannerapi)
     - [Overview](#overview)
     - [Key Attributes](#key-attributes)
@@ -24,17 +27,18 @@
         - [Reliability](#reliability)
     - [Gotchas & Notes](#-gotcha---notes)
 
-
 # Overview
+
 This repository manages the infrastructure for the [Trip Planner web application](https://github.com/lrasata/trip-planner-web-app) using **Terraform** on **AWS**.
 
 The application includes:
 - Backend API (Fargate on ECS + RDS)
 - Locations API (Lambda + API Gateway)
 - Frontend Web App (S3 + CloudFront)
+- [Serverless file uploader (Lambda + API Gateway)](https://github.com/lrasata/infra-file-uploader)
+- [Serverless image moderator (Lambda + API Gateway)](https://github.com/lrasata/infra-s3-image-moderator)
 
-The architecture is designed to be **robust, secure, and scalable**, leveraging AWS managed services 
-to reduce operational overhead.
+The architecture is designed to be **robust, secure, and scalable**, leveraging AWS managed services to reduce operational overhead.
 
 ## Architecture
 
@@ -42,7 +46,7 @@ to reduce operational overhead.
 
 # Backend infrastructure (TripPlannerAPI)
 ## Overview
-The backend of *Trip Planner* is a **Spring Boot application** which provides CRUD operations for trip data.
+The backend of *Trip Planner* is a **Spring Boot application** which provides CRUD operations for managing trip data.
 
 <img src="docs/backend-diagram.png" alt="trip-planner-backend-api-infra">
 
@@ -96,7 +100,7 @@ always accurate for ECS or non-EC2 clients. Don’t rely on it to debug connecti
 - *ECS Container Start = Slower Than Expected:* Don't expect ECS Fargate to start containers instantly. Between image pulling, network setup, and health checks, startup can take 1–2+ minutes.
 
 ### Secrets Manager
-- *SecretsManager ≠ Instant Fix:* Referencing secrets inside ECS task definitions must follow exact syntax (valueFrom must use the full ARN or proper SecretsManager parameter name). Mismatched names will cause cryptic errors.
+- *SecretsManager ≠ Instant Fix:* Referencing secrets inside ECS task definitions must follow exact syntax (valueFrom must use the full ARN or proper SecretsManager parameter name). Mismatched names will cause cryptic errors. After fixing the issue, you should destroy and recreate the stack, redeployment only is not enough.
 
 ### Terraform
 - *Security Group Deletion Blocked:* Terraform cannot delete a security group if it's still attached to active resources (like ECS, ALB, or RDS) — even if the plan shows successful validation. This can stall terraform destroy for several minutes.
@@ -106,28 +110,24 @@ always accurate for ECS or non-EC2 clients. Don’t rely on it to debug connecti
 
 ## Overview
 
-[Trip planner web app](https://github.com/lrasata/trip-planner-web-app) is using [Geo DB API](https://rapidapi.com/wirefreethought/api/geodb-cities)
-to fetch data related to cities and countries.
+[Trip planner web app](https://github.com/lrasata/trip-planner-web-app) is using [Geo DB API](https://rapidapi.com/wirefreethought/api/geodb-cities) to fetch data related to cities and countries.
 
-To be able to deploy [Trip planner web app](https://github.com/lrasata/trip-planner-web-app)
-(React + TypeScript web app) securely on S3 + CloudFront, it must provide a secret `API_KEY` in the header of an authenticated request.
+To be able to deploy [Trip planner web app](https://github.com/lrasata/trip-planner-web-app (React + TypeScript web app) securely on S3 + CloudFront, it must provide a secret `API_KEY` in the header of an authenticated request.
 
-But the challenge is to inject secrets securely in a React + Vite app, secrets must be separated from
-the frontend and a backend must be used to access them. **There is no secure way to keep a secret in a public browser app.**
+But the challenge is to inject secrets securely in a React + Vite app, secrets must be separated from the frontend and a backend must be used to access them. **There is no secure way to keep a secret in a public browser app.**
 
-`Locations API` has been created to provide an API endpoint to call for the frontend without requiring any secrets. 
-Those components provide a secure serverless API for accessing location data, powered by AWS Lambda and API Gateway.
+`Locations API` has been created to provide an API endpoint to call for the frontend without requiring any secrets.  Those components provide a secure serverless API for accessing location data, powered by AWS Lambda and API Gateway.
 
 <img src="./docs/locations-api.png" alt="location-api-diagram">
 
+>
 > Refer to the [Locations API repository](https://github.com/lrasata/locations-api) for full details
+>
 
 # Frontend - Trip planner web app
 
 ## Overview
-This part of the infrastructure sets up an AWS **CloudFront distribution** to serve a **Single Page Application (SPA)** 
-from an **S3 bucket**, using **Lambda@Edge** to handle routing for client-side routes. It ensures that all SPA routes 
-return `index.html` while keeping the S3 bucket secure and private.
+This part of the infrastructure sets up an AWS **CloudFront distribution** to serve a **Single Page Application (SPA)** from an **S3 bucket**, using **Lambda@Edge** to handle routing for client-side routes. It ensures that all SPA routes return `index.html` while keeping the S3 bucket secure and private.
 
 <img src="docs/frontend-diagram.png" alt="trip-planner-frontend-infra">
 
