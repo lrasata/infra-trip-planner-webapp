@@ -2,6 +2,7 @@ module "s3" {
   source = "./modules/s3"
 
   environment                = var.environment
+  app_id                     = var.app_id
   static_web_app_bucket_name = var.static_web_app_bucket_name
 }
 

@@ -234,7 +234,7 @@ jobs:
       TF_VAR_cloudfront_domain_name: "${{ github.event.inputs.environment }}.epic-trip-planner.com"
       TF_VAR_cloudfront_certificate_arn: ${{secrets.CLOUDFRONT_CERTIFICATE_ARN}}
       TF_VAR_backend_certificate_arn: ${{secrets.BACKEND_CERTIFICATE_ARN}}
-      TF_VAR_static_web_app_bucket_name: static-web-app-bucket-${{ github.event.inputs.environment }}
+      TF_VAR_static_web_app_bucket_name: static-web-app-bucket
       TF_VAR_api_file_upload_domain_name: ${{ github.event.inputs.environment }}-file-upload-api.epic-trip-planner.com
       TF_VAR_api_locations_domain_name: ${{ github.event.inputs.environment }}-api-locations.epic-trip-planner.com
       TF_VAR_API_CITIES_GEO_DB_URL: ${{secrets.API_CITIES_GEO_DB_URL}}
