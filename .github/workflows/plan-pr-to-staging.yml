@@ -50,6 +50,7 @@ jobs:
           scan-type: config
           scan-ref: terraform/layers/security
           severity: HIGH,CRITICAL
+          exit-code: '1'
 
       - name: Terraform Plan (staging)
         working-directory: terraform/layers/security
@@ -113,6 +114,7 @@ jobs:
           scan-type: config
           scan-ref: terraform/layers/networking
           severity: HIGH,CRITICAL
+          exit-code: '1'
 
       - name: Terraform Plan (staging)
         working-directory: terraform/layers/networking
@@ -173,6 +175,7 @@ jobs:
           scan-type: config
           scan-ref: terraform/layers/database
           severity: HIGH,CRITICAL
+          exit-code: '1'
 
       - name: Terraform Plan (staging)
         working-directory: terraform/layers/database
@@ -245,6 +248,7 @@ jobs:
           scan-type: config
           scan-ref: terraform/layers/backend
           severity: HIGH,CRITICAL
+          exit-code: '1'
 
       - name: Terraform Plan (staging)
         working-directory: terraform/layers/backend
@@ -314,6 +318,7 @@ jobs:
           scan-type: config
           scan-ref: terraform/layers/frontend
           severity: HIGH,CRITICAL
+          exit-code: '1'
 
       - name: Terraform Plan (staging)
         working-directory: terraform/layers/frontend
