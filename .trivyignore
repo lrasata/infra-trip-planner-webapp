@@ -8,3 +8,6 @@ AVD-AWS-0104
 
 # ALB requires public ingress for HTTPS web access. This is an accepted risk for a public-facing web application.
 AVD-AWS-0107
+
+# ALB is intentionally public to serve internet traffic for the web application.
+AVD-AWS-0053
