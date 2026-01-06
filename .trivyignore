@@ -5,3 +5,6 @@ AVD-AWS-0105
 # ECS tasks require egress to 0.0.0.0/0 to reach the internet via NAT Gateway
 
 AVD-AWS-0104
+
+# ALB requires public ingress for HTTPS web access. This is an accepted risk for a public-facing web application.
+AVD-AWS-0107
