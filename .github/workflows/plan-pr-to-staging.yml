@@ -44,13 +44,12 @@ jobs:
             -backend-config="encrypt=true"
           terraform validate
 
-      - name: Run TFSec Security Check
-        uses: aquasecurity/tfsec-action@v1.0.0
+      - name: Trivy IaC Scan
+        uses: aquasecurity/trivy-action@0.20.0
         with:
-          working_directory: terraform/layers/security
-          soft_fail: 'true'
-          format: sarif
-          additional_args: --minimum-severity MEDIUM
+          scan-type: config
+          scan-ref: terraform/layers/security
+          severity: HIGH,CRITICAL
 
       - name: Terraform Plan (staging)
         working-directory: terraform/layers/security
@@ -108,13 +107,12 @@ jobs:
             -backend-config="encrypt=true"
           terraform validate
 
-      - name: Run TFSec Security Check
-        uses: aquasecurity/tfsec-action@v1.0.0
+      - name: Trivy IaC Scan
+        uses: aquasecurity/trivy-action@0.20.0
         with:
-          working_directory: terraform/layers/networking
-          soft_fail: 'true'
-          format: sarif
-          additional_args: --minimum-severity MEDIUM
+          scan-type: config
+          scan-ref: terraform/layers/networking
+          severity: HIGH,CRITICAL
 
       - name: Terraform Plan (staging)
         working-directory: terraform/layers/networking
@@ -169,13 +167,12 @@ jobs:
             -backend-config="encrypt=true"
           terraform validate
 
-      - name: Run TFSec Security Check
-        uses: aquasecurity/tfsec-action@v1.0.0
+      - name: Trivy IaC Scan
+        uses: aquasecurity/trivy-action@0.20.0
         with:
-          working_directory: terraform/layers/database
-          soft_fail: 'true'
-          format: sarif
-          additional_args: --minimum-severity MEDIUM
+          scan-type: config
+          scan-ref: terraform/layers/database
+          severity: HIGH,CRITICAL
 
       - name: Terraform Plan (staging)
         working-directory: terraform/layers/database
@@ -242,13 +239,12 @@ jobs:
             -backend-config="encrypt=true"
           terraform validate
 
-      - name: Run TFSec Security Check
-        uses: aquasecurity/tfsec-action@v1.0.0
+      - name: Trivy IaC Scan
+        uses: aquasecurity/trivy-action@0.20.0
         with:
-          working_directory: terraform/layers/backend
-          soft_fail: 'true'
-          format: sarif
-          additional_args: --minimum-severity MEDIUM
+          scan-type: config
+          scan-ref: terraform/layers/backend
+          severity: HIGH,CRITICAL
 
       - name: Terraform Plan (staging)
         working-directory: terraform/layers/backend
@@ -312,13 +308,12 @@ jobs:
             -backend-config="encrypt=true"
           terraform validate
 
-      - name: Run TFSec Security Check
-        uses: aquasecurity/tfsec-action@v1.0.0
+      - name: Trivy IaC Scan
+        uses: aquasecurity/trivy-action@0.20.0
         with:
-          working_directory: terraform/layers/frontend
-          soft_fail: 'true'
-          format: sarif
-          additional_args: --minimum-severity MEDIUM
+          scan-type: config
+          scan-ref: terraform/layers/frontend
+          severity: HIGH,CRITICAL
 
       - name: Terraform Plan (staging)
         working-directory: terraform/layers/frontend
