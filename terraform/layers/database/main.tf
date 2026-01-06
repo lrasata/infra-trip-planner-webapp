@@ -62,6 +62,6 @@ resource "aws_security_group" "sg_rds" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = try(data.terraform_remote_state.networking.outputs.private_subnets, ["subnet-placeholder1", "subnet-placeholder2"])
+    cidr_blocks = try(data.terraform_remote_state.networking.outputs.private_subnets, ["10.0.0.0/16"])
   }
 }
