@@ -4,6 +4,19 @@ resource "aws_s3_bucket" "s3_bucket" {
     Environment = var.environment
     App         = var.app_id
   }
+
+}
+
+# Enable server-side encryption with KMS
+resource "aws_s3_bucket_server_side_encryption_configuration" "uploads_encryption" {
+  bucket = aws_s3_bucket.uploads.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.s3_cmk.arn
+    }
+  }
 }
 
 #  Block public access to the S3 bucket
