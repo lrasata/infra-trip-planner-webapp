@@ -15,7 +15,7 @@ module "db" {
   engine_version          = "15"
   instance_class          = var.environment == "prod" ? "db.t3.medium" : "db.t3.micro"
   allocated_storage       = var.environment == "prod" ? 50 : 20 # GB
-  storage_encrypted       = var.environment == "prod" ? true : false
+  storage_encrypted       = true
   multi_az                = var.environment == "ephemeral" ? false : true
   backup_retention_period = var.environment == "prod" ? 7 : 0 # number of days
 
