@@ -19,6 +19,52 @@ module "vpc" {
     Environment = var.environment
     App         = var.app_id
   }
+
+  private_inbound_acl_rules = [
+    {
+      rule_number = 100
+      protocol    = "tcp"
+      rule_action = "allow"
+      cidr_block  = var.vpc_cidr
+      from_port   = 443
+      to_port     = 443
+    },
+    {
+      rule_number = 110
+      protocol    = "tcp"
+      rule_action = "allow"
+      cidr_block  = var.vpc_cidr
+      from_port   = 80
+      to_port     = 80
+    }
+  ]
+
+  private_outbound_acl_rules = [
+    {
+      rule_number = 100
+      protocol    = "tcp"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      from_port   = 443
+      to_port     = 443
+    },
+    {
+      rule_number = 110
+      protocol    = "tcp"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      from_port   = 80
+      to_port     = 80
+    },
+    {
+      rule_number = 120
+      protocol    = "tcp"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      from_port   = 1024
+      to_port     = 65535
+    }
+  ]
 }
 
 # Use gateway endpoint to allow private access to DynamoDB
