@@ -71,7 +71,9 @@ resource "aws_security_group" "sg_alb" {
     App         = var.app_id
   }
 
+
   ingress {
+    description = "Allow public HTTPS access for web app"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
@@ -82,7 +84,7 @@ resource "aws_security_group" "sg_alb" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] # ECS tasks require egress to 0.0.0.0/0 to reach the internet via NAT Gateway
   }
 }
 

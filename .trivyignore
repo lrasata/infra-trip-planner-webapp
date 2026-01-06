@@ -1,3 +1,7 @@
 # AVD-AWS-0105: Network ACL rule allows ingress from public internet. This is required for public-facing web applications to allow HTTP/HTTPS traffic from any IP. We acknowledge this as an accepted risk for our use case
 
 AVD-AWS-0105
+
+# ECS tasks require egress to 0.0.0.0/0 to reach the internet via NAT Gateway
+
+AVD-AWS-0104
