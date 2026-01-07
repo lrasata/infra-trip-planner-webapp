@@ -56,7 +56,7 @@ resource "aws_kms_key" "s3_cmk" {
           Sid       = "AllowCloudFrontServicePrincipal"
           Effect    = "Allow"
           Principal = { Service = "cloudfront.amazonaws.com" }
-          Action    = [
+          Action = [
             "kms:Decrypt",
             "kms:GenerateDataKey"
           ]

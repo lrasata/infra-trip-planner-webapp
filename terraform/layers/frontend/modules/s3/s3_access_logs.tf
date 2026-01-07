@@ -56,3 +56,14 @@ resource "aws_s3_bucket_logging" "s3_bucket_logging" {
     aws_s3_bucket_ownership_controls.log_target_ownership
   ]
 }
+
+# Enable server-side encryption with customer-managed KMS key for access logs bucket
+resource "aws_s3_bucket_server_side_encryption_configuration" "log_target_encryption" {
+  bucket = aws_s3_bucket.log_target.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.s3_cmk.arn
+    }
+  }
+}
