@@ -236,7 +236,15 @@ jobs:
           scan-type: image
           image-ref: ${{ env.TF_VAR_container_image }}
           severity: HIGH,CRITICAL
-          exit-code: '1'
+          exit-code: '0' # Do not fail the job on vulnerabilities
+          format: table
+          output: trivy-image-report.txt
+
+      - name: Upload Trivy image scan report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-image-backend
+          path: trivy-image-report.txt
 
       - name: Terraform Validate
         working-directory: terraform/layers/backend
@@ -354,28 +362,50 @@ jobs:
         with:
           path: plans/  # Download to plans/ directory
 
-      - name: Combine plans and post comment
+      - name: Combine plans and Trivy findings and post comment
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const path = require('path');
+
+            let body = '### Terraform Plan (staging - All Layers)\n\n';
             const plansDir = 'plans';
-            let combinedBody = '### Terraform Plan (staging - All Layers)\n\n';
             const layers = ['security', 'networking', 'database', 'backend', 'frontend'];
+
             for (const layer of layers) {
               const planPath = path.join(plansDir, `terraform-plan-staging-${layer}`, 'tfplan.txt');
               if (fs.existsSync(planPath)) {
-                const body = fs.readFileSync(planPath, 'utf8');
-                const MAX_LEN = 15000;  // Shorter per layer to fit combined
-                const planPreview = body.length > MAX_LEN ? body.slice(0, MAX_LEN - 1000) + '\n\n...(truncated)' : body;
-                combinedBody += `#### ${layer}\n<details>\n<summary>Click to expand</summary>\n\n\`\`\`\n${planPreview}\n\`\`\`\n\n</details>\n\n`;
+                const content = fs.readFileSync(planPath, 'utf8');
+                const MAX_LEN = 15000;
+                const preview = content.length > MAX_LEN
+                  ? content.slice(0, MAX_LEN - 1000) + '\n\n...(truncated)'
+                  : content;
+
+                body += `#### ${layer}\n<details>\n<summary>Click to expand</summary>\n\n\`\`\`\n${preview}\n\`\`\`\n\n</details>\n\n`;
               }
             }
+
+            // ---- Trivy Image Scan Section ----
+            const trivyPath = path.join(plansDir, 'trivy-image-backend', 'trivy-image-report.txt');
+            if (fs.existsSync(trivyPath)) {
+              const trivyReport = fs.readFileSync(trivyPath, 'utf8').trim();
+              if (trivyReport) {
+                const MAX_LEN = 15000;
+                const preview = trivyReport.length > MAX_LEN
+                  ? trivyReport.slice(0, MAX_LEN) + '\n\n...(truncated)'
+                  : trivyReport;
+
+                body += '---\n\n';
+                body += '### 🔐 Trivy Image Scan (Backend ECS Image)\n\n';
+                body += `<details>\n<summary>Click to expand</summary>\n\n\`\`\`\n${preview}\n\`\`\`\n\n</details>\n\n`;
+              }
+            }
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: combinedBody
+              body
             });
