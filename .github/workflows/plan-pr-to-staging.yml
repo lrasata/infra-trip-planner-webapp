@@ -44,13 +44,13 @@ jobs:
             -backend-config="encrypt=true"
           terraform validate
 
-      - name: Run TFSec Security Check
-        uses: aquasecurity/tfsec-action@v1.0.0
+      - name: Trivy IaC Scan
+        uses: aquasecurity/trivy-action@0.20.0
         with:
-          working_directory: terraform/layers/security
-          soft_fail: 'true'
-          format: sarif
-          additional_args: --minimum-severity MEDIUM
+          scan-type: config
+          scan-ref: terraform/layers/security
+          severity: HIGH,CRITICAL
+          exit-code: '1'
 
       - name: Terraform Plan (staging)
         working-directory: terraform/layers/security
@@ -108,13 +108,13 @@ jobs:
             -backend-config="encrypt=true"
           terraform validate
 
-      - name: Run TFSec Security Check
-        uses: aquasecurity/tfsec-action@v1.0.0
+      - name: Trivy IaC Scan
+        uses: aquasecurity/trivy-action@0.20.0
         with:
-          working_directory: terraform/layers/networking
-          soft_fail: 'true'
-          format: sarif
-          additional_args: --minimum-severity MEDIUM
+          scan-type: config
+          scan-ref: terraform/layers/networking
+          severity: HIGH,CRITICAL
+          exit-code: '1'
 
       - name: Terraform Plan (staging)
         working-directory: terraform/layers/networking
@@ -169,13 +169,13 @@ jobs:
             -backend-config="encrypt=true"
           terraform validate
 
-      - name: Run TFSec Security Check
-        uses: aquasecurity/tfsec-action@v1.0.0
+      - name: Trivy IaC Scan
+        uses: aquasecurity/trivy-action@0.20.0
         with:
-          working_directory: terraform/layers/database
-          soft_fail: 'true'
-          format: sarif
-          additional_args: --minimum-severity MEDIUM
+          scan-type: config
+          scan-ref: terraform/layers/database
+          severity: HIGH,CRITICAL
+          exit-code: '1'
 
       - name: Terraform Plan (staging)
         working-directory: terraform/layers/database
@@ -230,6 +230,22 @@ jobs:
           role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Trivy Image Scan (ECS backend image)
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          scan-type: image
+          image-ref: ${{ env.TF_VAR_container_image }}
+          severity: HIGH,CRITICAL
+          exit-code: '0' # Do not fail the job on vulnerabilities
+          format: table
+          output: trivy-image-report.txt
+
+      - name: Upload Trivy image scan report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-image-backend
+          path: trivy-image-report.txt
+
       - name: Terraform Validate
         working-directory: terraform/layers/backend
         run: |
@@ -242,13 +258,13 @@ jobs:
             -backend-config="encrypt=true"
           terraform validate
 
-      - name: Run TFSec Security Check
-        uses: aquasecurity/tfsec-action@v1.0.0
+      - name: Trivy IaC Scan
+        uses: aquasecurity/trivy-action@0.20.0
         with:
-          working_directory: terraform/layers/backend
-          soft_fail: 'true'
-          format: sarif
-          additional_args: --minimum-severity MEDIUM
+          scan-type: config
+          scan-ref: terraform/layers/backend
+          severity: HIGH,CRITICAL
+          exit-code: '1'
 
       - name: Terraform Plan (staging)
         working-directory: terraform/layers/backend
@@ -312,13 +328,13 @@ jobs:
             -backend-config="encrypt=true"
           terraform validate
 
-      - name: Run TFSec Security Check
-        uses: aquasecurity/tfsec-action@v1.0.0
+      - name: Trivy IaC Scan
+        uses: aquasecurity/trivy-action@0.20.0
         with:
-          working_directory: terraform/layers/frontend
-          soft_fail: 'true'
-          format: sarif
-          additional_args: --minimum-severity MEDIUM
+          scan-type: config
+          scan-ref: terraform/layers/frontend
+          severity: HIGH,CRITICAL
+          exit-code: '1'
 
       - name: Terraform Plan (staging)
         working-directory: terraform/layers/frontend
@@ -346,28 +362,50 @@ jobs:
         with:
           path: plans/  # Download to plans/ directory
 
-      - name: Combine plans and post comment
+      - name: Combine plans and Trivy findings and post comment
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const path = require('path');
+
+            let body = '### Terraform Plan (staging - All Layers)\n\n';
             const plansDir = 'plans';
-            let combinedBody = '### Terraform Plan (staging - All Layers)\n\n';
             const layers = ['security', 'networking', 'database', 'backend', 'frontend'];
+
             for (const layer of layers) {
               const planPath = path.join(plansDir, `terraform-plan-staging-${layer}`, 'tfplan.txt');
               if (fs.existsSync(planPath)) {
-                const body = fs.readFileSync(planPath, 'utf8');
-                const MAX_LEN = 15000;  // Shorter per layer to fit combined
-                const planPreview = body.length > MAX_LEN ? body.slice(0, MAX_LEN - 1000) + '\n\n...(truncated)' : body;
-                combinedBody += `#### ${layer}\n<details>\n<summary>Click to expand</summary>\n\n\`\`\`\n${planPreview}\n\`\`\`\n\n</details>\n\n`;
+                const content = fs.readFileSync(planPath, 'utf8');
+                const MAX_LEN = 15000;
+                const preview = content.length > MAX_LEN
+                  ? content.slice(0, MAX_LEN - 1000) + '\n\n...(truncated)'
+                  : content;
+
+                body += `#### ${layer}\n<details>\n<summary>Click to expand</summary>\n\n\`\`\`\n${preview}\n\`\`\`\n\n</details>\n\n`;
               }
             }
+
+            // ---- Trivy Image Scan Section ----
+            const trivyPath = path.join(plansDir, 'trivy-image-backend', 'trivy-image-report.txt');
+            if (fs.existsSync(trivyPath)) {
+              const trivyReport = fs.readFileSync(trivyPath, 'utf8').trim();
+              if (trivyReport) {
+                const MAX_LEN = 15000;
+                const preview = trivyReport.length > MAX_LEN
+                  ? trivyReport.slice(0, MAX_LEN) + '\n\n...(truncated)'
+                  : trivyReport;
+
+                body += '---\n\n';
+                body += '### 🔐 Trivy Image Scan (Backend ECS Image)\n\n';
+                body += `<details>\n<summary>Click to expand</summary>\n\n\`\`\`\n${preview}\n\`\`\`\n\n</details>\n\n`;
+              }
+            }
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: combinedBody
+              body
             });

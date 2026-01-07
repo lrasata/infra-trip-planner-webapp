@@ -2,6 +2,7 @@
 # It creates automatically an Internet Gateway (IGW) and attach it to the VPC. Create a route table for the public subnets with a 0.0.0.0/0 → igw-xxxx route.
 # And associate that route table with your 3 public subnets. 
 module "vpc" {
+
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.1.0"
 
@@ -19,6 +20,98 @@ module "vpc" {
     Environment = var.environment
     App         = var.app_id
   }
+
+  private_inbound_acl_rules = [
+    {
+      rule_number = 100
+      protocol    = "tcp"
+      rule_action = "allow"
+      cidr_block  = var.vpc_cidr
+      from_port   = 443
+      to_port     = 443
+    },
+    {
+      rule_number = 110
+      protocol    = "tcp"
+      rule_action = "allow"
+      cidr_block  = var.vpc_cidr
+      from_port   = 80
+      to_port     = 80
+    }
+  ]
+
+  private_outbound_acl_rules = [
+    {
+      rule_number = 100
+      protocol    = "tcp"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      from_port   = 443
+      to_port     = 443
+    },
+    {
+      rule_number = 110
+      protocol    = "tcp"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      from_port   = 80
+      to_port     = 80
+    },
+    {
+      rule_number = 120
+      protocol    = "tcp"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      from_port   = 1024
+      to_port     = 65535
+    }
+  ]
+
+  public_inbound_acl_rules = [
+    {
+      rule_number = 100
+      protocol    = "tcp"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      from_port   = 80
+      to_port     = 80
+    },
+    {
+      rule_number = 110
+      protocol    = "tcp"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      from_port   = 443
+      to_port     = 443
+    }
+  ]
+
+  public_outbound_acl_rules = [
+    {
+      rule_number = 100
+      protocol    = "tcp"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      from_port   = 80
+      to_port     = 80
+    },
+    {
+      rule_number = 110
+      protocol    = "tcp"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      from_port   = 443
+      to_port     = 443
+    },
+    {
+      rule_number = 120
+      protocol    = "tcp"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      from_port   = 1024
+      to_port     = 65535
+    }
+  ]
 }
 
 # Use gateway endpoint to allow private access to DynamoDB

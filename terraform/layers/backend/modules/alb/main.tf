@@ -35,7 +35,7 @@ module "terraform_aws_alb" {
     {
       port            = 443
       protocol        = "HTTPS"
-      ssl_policy      = "ELBSecurityPolicy-2016-08"
+      ssl_policy      = "ELBSecurityPolicy-TLS-1-2-2017-01"
       certificate_arn = var.backend_certificate_arn
 
       default_action = {
@@ -44,6 +44,8 @@ module "terraform_aws_alb" {
       }
     }
   ]
+
+  drop_invalid_header_fields = true
 
 }
 
@@ -71,7 +73,9 @@ resource "aws_security_group" "sg_alb" {
     App         = var.app_id
   }
 
+
   ingress {
+    description = "Allow public HTTPS access for web app"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
@@ -82,7 +86,7 @@ resource "aws_security_group" "sg_alb" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] # ECS tasks require egress to 0.0.0.0/0 to reach the internet via NAT Gateway
   }
 }
 
