@@ -50,6 +50,17 @@ resource "aws_kms_key" "s3_cmk" {
               "aws:SourceAccount" = data.aws_caller_identity.current.account_id
             }
           }
+        },
+        # Allow CloudFront to decrypt S3 objects
+        {
+          Sid       = "AllowCloudFrontServicePrincipal"
+          Effect    = "Allow"
+          Principal = { Service = "cloudfront.amazonaws.com" }
+          Action    = [
+            "kms:Decrypt",
+            "kms:GenerateDataKey"
+          ]
+          Resource = "*"
         }
       ]
     ])
