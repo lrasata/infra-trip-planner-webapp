@@ -1,7 +1,7 @@
 data "aws_caller_identity" "current" {}
 
 resource "aws_kms_key" "s3_cmk" {
-  description         = "CMK for S3 uploads and access logs"
+  description         = "CMK for S3 and access logs"
   enable_key_rotation = true
 
   policy = jsonencode({
@@ -54,7 +54,7 @@ resource "aws_kms_key" "s3_cmk" {
 }
 
 resource "aws_kms_alias" "s3_cmk_alias" {
-  name          = "alias/${var.environment}-${var.app_id}-s3-cmk"
+  name          = "alias/${var.environment}-${var.app_id}-s3-cmk-static-web-app-bucket"
   target_key_id = aws_kms_key.s3_cmk.id
 }
 
