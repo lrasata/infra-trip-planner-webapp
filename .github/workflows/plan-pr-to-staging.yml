@@ -230,6 +230,14 @@ jobs:
           role-to-assume: arn:aws:iam::387836084035:role/githubTripPlannerInfraManager
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Trivy Image Scan (ECS backend image)
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          scan-type: image
+          image-ref: ${{ env.TF_VAR_container_image }}
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+
       - name: Terraform Validate
         working-directory: terraform/layers/backend
         run: |
