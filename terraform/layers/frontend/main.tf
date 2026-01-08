@@ -62,7 +62,7 @@ module "route53" {
 }
 
 module "locations_api" {
-  source = "git::https://github.com/lrasata/locations-api.git//modules/locations_api?ref=v1.0.2"
+  source = "git::https://github.com/lrasata/locations-api.git//modules/locations_api?ref=v1.0.3"
 
   region                    = var.region
   environment               = var.environment
